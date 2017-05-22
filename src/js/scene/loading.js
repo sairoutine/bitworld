@@ -37,8 +37,7 @@ SceneLoading.prototype.beforeDraw = function() {
 
 	//if (this.core.image_loader.isAllLoaded() && this.core.audio_loader.isAllLoaded() && this.core.font_loader.isAllLoaded()) {
 	if (this.core.image_loader.isAllLoaded()) {
-		console.log("done!");
-		//this.core.changeScene("title");
+		this.core.changeScene("stage");
 	}
 };
 SceneLoading.prototype.draw = function(){
