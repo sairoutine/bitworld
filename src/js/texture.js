@@ -1,5 +1,5 @@
 'use strict';
-var TextureAtlas = function(gl, url,tileSize) {
+var TextureAtlas = function(gl, image, tileSize) {
 	this.gl = gl;
 	this.tileSizePx = tileSize;
 	this.imageSizePx = 0;
@@ -8,16 +8,9 @@ var TextureAtlas = function(gl, url,tileSize) {
 	this.paddingNormalized = 0;
 	this.texture = null;
 
-	this.loadImageTexture(url);
-};
-
-// Load from URL
-TextureAtlas.prototype.loadImageTexture = function(url) {
-	var atlas = this;
 	var texture = this.gl.createTexture();
-	texture.image = new Image();
-	texture.image.onload = function() { atlas.handleTexture(texture.image, texture); };
-	texture.image.src = url;
+
+	this.handleTexture(image, texture);
 };
 
 TextureAtlas.prototype.handleTexture = function(image, texture) {
