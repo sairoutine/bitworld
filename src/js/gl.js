@@ -3,8 +3,6 @@
 var WebGLDebugUtils = require("webgl-debug");
 
 var createWebGLContext = function (canvas) {
-	//  rewrite canvas dom
-	canvas = document.createElement('canvas');
 	var gl;
 	try {
 		gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');

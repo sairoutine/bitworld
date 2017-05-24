@@ -3,6 +3,7 @@
 var base_scene = require('../hakurei').scene.base;
 var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
+var createWebGLContext = require('../gl');
 var TextureAtlas = require('../texture');
 
 var SceneLoading = function(core) {
@@ -13,11 +14,10 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
+	var canvas = document.getElementById('subCanvas');
+	var gtx = createWebGLContext(canvas);
 	var texture = {};
-	texture.land = new TextureAtlas(this.core.gtx, this.core.image_loader.getImage("ldfaithful"), 8);
-
-	console.log(texture);
-
+	texture.land = new TextureAtlas(gtx, this.core.image_loader.getImage("ldfaithful"), 8);
 };
 
 /*
