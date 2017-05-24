@@ -3,6 +3,7 @@
 var base_scene = require('../hakurei').scene.base;
 var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
+var TextureAtlas = require('../texture');
 
 var SceneLoading = function(core) {
 	base_scene.apply(this, arguments);
@@ -12,13 +13,11 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
-};
+	var texture = {};
+	texture.land = new TextureAtlas(this.core.gtx, this.core.image_loader.getImage("ldfaithful"), 8);
 
-SceneLoading.prototype.beforeDraw = function() {
-	base_scene.prototype.beforeDraw.apply(this, arguments);
+	console.log(texture);
 
-};
-SceneLoading.prototype.draw = function(){
 };
 
 /*
@@ -48,6 +47,16 @@ SceneLoading.prototype.draw = function(){
 
 		goToLevel(this.levelNum);
 */
+
+
+
+SceneLoading.prototype.beforeDraw = function() {
+	base_scene.prototype.beforeDraw.apply(this, arguments);
+
+};
+SceneLoading.prototype.draw = function(){
+};
+
 /*
 		function goToLevel(l) {
 			this.level = levels.getLevel(l);
