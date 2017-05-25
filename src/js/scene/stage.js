@@ -12,6 +12,7 @@ function centerXY(pos) {
 
 
 var base_scene = require('../hakurei').scene.base;
+var CONSTANT = require('../hakurei').constant;
 var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
 var createWebGLContext = require('../gl');
@@ -100,6 +101,7 @@ SceneLoading.prototype.draw = function(){
 	this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.canvas.width/this.canvas.height, 0.1, 100.0);
 
+	this.handleInputs();
 	//handleInputs();
 
 	this.lights[0].position = this.player.pos.slice(0);
@@ -203,25 +205,29 @@ SceneLoading.prototype.checkStairs = function() {
 	}
 };
 
+SceneLoading.prototype.handleInputs = function() {
+	if(this.core.isKeyDown(CONSTANT.BUTTON_UP)) {
+		this.player.turnAndMove(this.terrain, 0);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_LEFT)) {
+		this.player.flipped = 1;
+		this.player.turnAndMove(this.terrain, Math.PI/2);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_DOWN)) {
+		this.player.turnAndMove(this.terrain, Math.PI);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_RIGHT)) {
+		this.player.flipped = 0;
+		this.player.turnAndMove(this.terrain,-Math.PI/2);
+	}
+
+	//case  3: this.player.flipped = 1; this.player.turnAndMove(this.terrain, Math.PI/4); break;
+	//case  6: this.player.flipped = 1; this.player.turnAndMove(this.terrain, 3/4*Math.PI); break;
+	//case  9: this.player.flipped = 0; this.player.turnAndMove(this.terrain,-Math.PI/4); break;
+	//case 12: this.player.flipped = 0; this.player.turnAndMove(this.terrain, 5/4*Math.PI); break;
+	//
+	//
 /*
-		function handleInputs() {
-			var inputMask = 0;
-			if (input.pressedKeys[87]) inputMask += 1; // W
-			if (input.pressedKeys[65]) inputMask += 2; // A
-			if (input.pressedKeys[83]) inputMask += 4; // S
-			if (input.pressedKeys[68]) inputMask += 8; // D
-
-			switch(inputMask) {
-			case  1: this.player.turnAndMove(this.terrain, 0); break;
-			case  2: this.player.flipped = 1; this.player.turnAndMove(this.terrain, Math.PI/2); break;
-			case  3: this.player.flipped = 1; this.player.turnAndMove(this.terrain, Math.PI/4); break;
-			case  4: this.player.turnAndMove(this.terrain, Math.PI); break;
-			case  6: this.player.flipped = 1; this.player.turnAndMove(this.terrain, 3/4*Math.PI); break;
-			case  8: this.player.flipped = 0; this.player.turnAndMove(this.terrain,-Math.PI/2); break;
-			case  9: this.player.flipped = 0; this.player.turnAndMove(this.terrain,-Math.PI/4); break;
-			case 12: this.player.flipped = 0; this.player.turnAndMove(this.terrain, 5/4*Math.PI); break;
-			}
-
 			if (input.rightClick) {
 				var angleChange = [-input.mouseMove[1]*this.data.rotateSpeed, 0, input.mouseMove[0]*this.data.rotateSpeed];
 				this.camera.changeAngle(angleChange);
@@ -232,6 +238,6 @@ SceneLoading.prototype.checkStairs = function() {
 				this.camera.changeDistance(input.scroll);
 				input.scroll = 0;
 			}
-		}
 */
+};
 module.exports = SceneLoading;
