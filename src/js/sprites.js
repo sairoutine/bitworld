@@ -87,13 +87,13 @@ Sprites.prototype.addSprite = function(tileNum, pos) {
 	this.baseIndex += 4;
 };
 
-Sprite.prototype.flipSprite = function(spriteId, flipped) {
+Sprites.prototype.flipSprite = function(spriteId, flipped) {
 	for (var i=0; i<4; i++) {
 		this.flipped[spriteId*4+i] = this.sprites[spriteId].flipped;
 	}
 };
 
-Sprite.prototype.moveSprite = function(spriteId, pos) {
+Sprites.prototype.moveSprite = function(spriteId, pos) {
 	for (var i=0; i<4; i++) {
 		this.moving[spriteId*4+i] = this.sprites[spriteId].moving;
 		for (var j=0; j<3; j++) 
@@ -101,7 +101,7 @@ Sprite.prototype.moveSprite = function(spriteId, pos) {
 	}
 };
 
-Sprite.prototype.offsetSprite = function(spriteId, d) {
+Sprites.prototype.offsetSprite = function(spriteId, d) {
 	for (var i=0; i<4; i++) 
 		for (var j=0; j<3; j++) 
 			this.vertices[spriteId*4+i*3+j] += d[j];
