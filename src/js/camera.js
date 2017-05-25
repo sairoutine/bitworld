@@ -22,22 +22,6 @@ var Camera = function() {
 /** If there is an object between the camera and the center, move
 	the camera in front of the blocking object */
 Camera.prototype.checkCollision = function(env) {
-	return false; // DEBUG
-	for (var d=0.5; d<this.desiredDistance+1.0; d+=0.5) {
-		var p = this.sphericalToCartesian(this.center,d,this.theta);
-		for (var i=0; i<3; i++)
-			p[i] = Math.floor(p[i]);
-		// If camera is outside the environment, continue
-		if (p[2] < 0 || p[2] >= env.length || 
-			p[1] < 0 || p[1] >= env[p[2]].length ||
-			p[0] < 0 || p[0] >= env[p[2]][p[1]].length)
-			continue;
-
-		if (env[p[2]][p[1]][p[0]]) {
-			this.currentDistance = d-0.5;
-			return true;
-		}
-	}
 	return false;
 };
 
@@ -86,7 +70,7 @@ Camera.prototype.updateMatrix = function(env) {
 		else if (this.theta[i] > 2*Math.PI)
 			this.theta[i] -= 2*Math.PI;
 	}
-	if (env && !this.checkCollision(env)) {
+	if (env) {
 		this.currentDistance *= 1-this.zoomWeight; 
 		this.currentDistance += this.zoomWeight*this.desiredDistance;
 	}
