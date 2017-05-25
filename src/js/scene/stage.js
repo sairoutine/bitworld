@@ -5,6 +5,7 @@ var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
 var createWebGLContext = require('../gl');
 var TextureAtlas = require('../texture');
+var Terrain = require('../terrain');
 
 var SceneLoading = function(core) {
 	base_scene.apply(this, arguments);
@@ -16,19 +17,19 @@ SceneLoading.prototype.init = function() {
 
 	var canvas = document.getElementById('subCanvas');
 	var gtx = createWebGLContext(canvas);
+
 	var texture = {};
-	texture.land = new TextureAtlas(gtx, this.core.image_loader.getImage("ldfaithful"), 8);
+	texture.land    = new TextureAtlas(gtx, this.core.image_loader.getImage("ldfaithful"), 8);
+	texture.sprites = new TextureAtlas(gtx, this.core.image_loader.getImage("oryx"), 8);
+
+	this.counter = 0; // TODO: frame_count に置き換える
+
+	this.terrain = new Terrain(gtx, texture.land);
 };
 
 /*
-		texture.land = new texture.TextureAtlas("img/ldfaithful.png", 8);
-		texture.sprites = null;
-		this.terrain = null;
-		this.sprites = null;
-		this.counter = 0;
 		
-		texture.sprites = new texture.TextureAtlas("img/oryx.png", 8);
-		this.terrain = new terrain.Terrain(texture.land);
+		this.terrain = null;
 
 		this.camera = new camera.Camera();
 
@@ -38,6 +39,7 @@ SceneLoading.prototype.init = function() {
 		this.lights = [];
 		this.lights[0] = new light.PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
+		this.sprites = null;
 		this.sprites = new sprites.Sprites(texture.sprites);
 		this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
 		this.player = this.sprites.sprites[0];

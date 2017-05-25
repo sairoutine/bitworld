@@ -1,7 +1,9 @@
 'use strict';
-/* global gl, texture */
 
-var Terrain = function(textureAtlas) {
+/* 地形 */
+
+var Terrain = function(gl, textureAtlas) {
+	this.gl = gl;
 	this.textureAtlas = textureAtlas;
 	this.cubes = [];
 	this.vertices = [];
@@ -76,28 +78,28 @@ Terrain.prototype.generate = function(world) {
 	}
 
 	// Initialize buffer data
-	gl.deleteBuffer(this.vertexObject);
-	gl.deleteBuffer(this.normalObject);
-	gl.deleteBuffer(this.texCoordObject);
-	gl.deleteBuffer(this.indexObject);
-	this.vertexObject = gl.createBuffer();
-	this.normalObject = gl.createBuffer();
-	this.texCoordObject = gl.createBuffer();
-	this.indexObject = gl.createBuffer();
+	this.gl.deleteBuffer(this.vertexObject);
+	this.gl.deleteBuffer(this.normalObject);
+	this.gl.deleteBuffer(this.texCoordObject);
+	this.gl.deleteBuffer(this.indexObject);
+	this.vertexObject = this.gl.createBuffer();
+	this.normalObject = this.gl.createBuffer();
+	this.texCoordObject = this.gl.createBuffer();
+	this.indexObject = this.gl.createBuffer();
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.vertexObject);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.vertices), gl.STATIC_DRAW);
+	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexObject);
+	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.normalObject);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals), gl.STATIC_DRAW);
+	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.normalObject);
+	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.normals), this.gl.STATIC_DRAW);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, this.texCoordObject);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texCoords), gl.STATIC_DRAW);
+	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.texCoordObject);
+	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.texCoords), this.gl.STATIC_DRAW);
 
-	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexObject);
-	gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), gl.STATIC_DRAW);
+	this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexObject);
+	this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
 
-	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 };
 
 /** Add block to terrain (modifies vertices, normals, texCoords) 
