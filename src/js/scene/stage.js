@@ -7,6 +7,8 @@ var createWebGLContext = require('../gl');
 var TextureAtlas = require('../texture');
 var Terrain = require('../terrain');
 var Camera = require('../camera');
+var Level = require('../level');
+var PointLight = require('../point_light');
 
 var SceneLoading = function(core) {
 	base_scene.apply(this, arguments);
@@ -29,15 +31,21 @@ SceneLoading.prototype.init = function() {
 	this.terrain = new Terrain(gtx, texture.land);
 	// カメラ
 	this.camera = new Camera();
+
+	// レベル
+	this.levelNum = 0; // 1~8
+	this.level = Level.getLevel(this.levelNum);
+
+	// ライト一覧
+	this.lights = [];
+	// (恐らく)スタート地点のライト
+	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
+
+
 };
 
 /*
 
-		this.levelNum = 0;
-		this.level = levels.getLevel(this.levelNum);
-
-		this.lights = [];
-		this.lights[0] = new light.PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 		this.sprites = null;
 		this.sprites = new sprites.Sprites(texture.sprites);
@@ -57,6 +65,8 @@ SceneLoading.prototype.beforeDraw = function() {
 
 };
 SceneLoading.prototype.draw = function(){
+
+
 };
 
 /*
