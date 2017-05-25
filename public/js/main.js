@@ -1,4 +1,6 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+
+},{}],2:[function(require,module,exports){
 /**
  * @fileoverview gl-matrix - High performance matrix and vector operations
  * @author Brandon Jones
@@ -36,7 +38,7 @@ exports.quat = require("./gl-matrix/quat.js");
 exports.vec2 = require("./gl-matrix/vec2.js");
 exports.vec3 = require("./gl-matrix/vec3.js");
 exports.vec4 = require("./gl-matrix/vec4.js");
-},{"./gl-matrix/common.js":2,"./gl-matrix/mat2.js":3,"./gl-matrix/mat2d.js":4,"./gl-matrix/mat3.js":5,"./gl-matrix/mat4.js":6,"./gl-matrix/quat.js":7,"./gl-matrix/vec2.js":8,"./gl-matrix/vec3.js":9,"./gl-matrix/vec4.js":10}],2:[function(require,module,exports){
+},{"./gl-matrix/common.js":3,"./gl-matrix/mat2.js":4,"./gl-matrix/mat2d.js":5,"./gl-matrix/mat3.js":6,"./gl-matrix/mat4.js":7,"./gl-matrix/quat.js":8,"./gl-matrix/vec2.js":9,"./gl-matrix/vec3.js":10,"./gl-matrix/vec4.js":11}],3:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -108,7 +110,7 @@ glMatrix.equals = function(a, b) {
 
 module.exports = glMatrix;
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -546,7 +548,7 @@ mat2.multiplyScalarAndAdd = function(out, a, b, scale) {
 
 module.exports = mat2;
 
-},{"./common.js":2}],4:[function(require,module,exports){
+},{"./common.js":3}],5:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1017,7 +1019,7 @@ mat2d.equals = function (a, b) {
 
 module.exports = mat2d;
 
-},{"./common.js":2}],5:[function(require,module,exports){
+},{"./common.js":3}],6:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -1765,7 +1767,7 @@ mat3.equals = function (a, b) {
 
 module.exports = mat3;
 
-},{"./common.js":2}],6:[function(require,module,exports){
+},{"./common.js":3}],7:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -3903,7 +3905,7 @@ mat4.equals = function (a, b) {
 
 module.exports = mat4;
 
-},{"./common.js":2}],7:[function(require,module,exports){
+},{"./common.js":3}],8:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -4505,7 +4507,7 @@ quat.equals = vec4.equals;
 
 module.exports = quat;
 
-},{"./common.js":2,"./mat3.js":5,"./vec3.js":9,"./vec4.js":10}],8:[function(require,module,exports){
+},{"./common.js":3,"./mat3.js":6,"./vec3.js":10,"./vec4.js":11}],9:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -5094,7 +5096,7 @@ vec2.equals = function (a, b) {
 
 module.exports = vec2;
 
-},{"./common.js":2}],9:[function(require,module,exports){
+},{"./common.js":3}],10:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -5873,7 +5875,7 @@ vec3.equals = function (a, b) {
 
 module.exports = vec3;
 
-},{"./common.js":2}],10:[function(require,module,exports){
+},{"./common.js":3}],11:[function(require,module,exports){
 /* Copyright (c) 2015, Brandon Jones, Colin MacKenzie IV.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -6484,7 +6486,421 @@ vec4.equals = function (a, b) {
 
 module.exports = vec4;
 
-},{"./common.js":2}],11:[function(require,module,exports){
+},{"./common.js":3}],12:[function(require,module,exports){
+(function (process){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+// resolves . and .. elements in a path array with directory names there
+// must be no slashes, empty elements, or device names (c:\) in the array
+// (so also no leading and trailing slashes - it does not distinguish
+// relative and absolute paths)
+function normalizeArray(parts, allowAboveRoot) {
+  // if the path tries to go above the root, `up` ends up > 0
+  var up = 0;
+  for (var i = parts.length - 1; i >= 0; i--) {
+    var last = parts[i];
+    if (last === '.') {
+      parts.splice(i, 1);
+    } else if (last === '..') {
+      parts.splice(i, 1);
+      up++;
+    } else if (up) {
+      parts.splice(i, 1);
+      up--;
+    }
+  }
+
+  // if the path is allowed to go above the root, restore leading ..s
+  if (allowAboveRoot) {
+    for (; up--; up) {
+      parts.unshift('..');
+    }
+  }
+
+  return parts;
+}
+
+// Split a filename into [root, dir, basename, ext], unix version
+// 'root' is just a slash, or nothing.
+var splitPathRe =
+    /^(\/?|)([\s\S]*?)((?:\.{1,2}|[^\/]+?|)(\.[^.\/]*|))(?:[\/]*)$/;
+var splitPath = function(filename) {
+  return splitPathRe.exec(filename).slice(1);
+};
+
+// path.resolve([from ...], to)
+// posix version
+exports.resolve = function() {
+  var resolvedPath = '',
+      resolvedAbsolute = false;
+
+  for (var i = arguments.length - 1; i >= -1 && !resolvedAbsolute; i--) {
+    var path = (i >= 0) ? arguments[i] : process.cwd();
+
+    // Skip empty and invalid entries
+    if (typeof path !== 'string') {
+      throw new TypeError('Arguments to path.resolve must be strings');
+    } else if (!path) {
+      continue;
+    }
+
+    resolvedPath = path + '/' + resolvedPath;
+    resolvedAbsolute = path.charAt(0) === '/';
+  }
+
+  // At this point the path should be resolved to a full absolute path, but
+  // handle relative paths to be safe (might happen when process.cwd() fails)
+
+  // Normalize the path
+  resolvedPath = normalizeArray(filter(resolvedPath.split('/'), function(p) {
+    return !!p;
+  }), !resolvedAbsolute).join('/');
+
+  return ((resolvedAbsolute ? '/' : '') + resolvedPath) || '.';
+};
+
+// path.normalize(path)
+// posix version
+exports.normalize = function(path) {
+  var isAbsolute = exports.isAbsolute(path),
+      trailingSlash = substr(path, -1) === '/';
+
+  // Normalize the path
+  path = normalizeArray(filter(path.split('/'), function(p) {
+    return !!p;
+  }), !isAbsolute).join('/');
+
+  if (!path && !isAbsolute) {
+    path = '.';
+  }
+  if (path && trailingSlash) {
+    path += '/';
+  }
+
+  return (isAbsolute ? '/' : '') + path;
+};
+
+// posix version
+exports.isAbsolute = function(path) {
+  return path.charAt(0) === '/';
+};
+
+// posix version
+exports.join = function() {
+  var paths = Array.prototype.slice.call(arguments, 0);
+  return exports.normalize(filter(paths, function(p, index) {
+    if (typeof p !== 'string') {
+      throw new TypeError('Arguments to path.join must be strings');
+    }
+    return p;
+  }).join('/'));
+};
+
+
+// path.relative(from, to)
+// posix version
+exports.relative = function(from, to) {
+  from = exports.resolve(from).substr(1);
+  to = exports.resolve(to).substr(1);
+
+  function trim(arr) {
+    var start = 0;
+    for (; start < arr.length; start++) {
+      if (arr[start] !== '') break;
+    }
+
+    var end = arr.length - 1;
+    for (; end >= 0; end--) {
+      if (arr[end] !== '') break;
+    }
+
+    if (start > end) return [];
+    return arr.slice(start, end - start + 1);
+  }
+
+  var fromParts = trim(from.split('/'));
+  var toParts = trim(to.split('/'));
+
+  var length = Math.min(fromParts.length, toParts.length);
+  var samePartsLength = length;
+  for (var i = 0; i < length; i++) {
+    if (fromParts[i] !== toParts[i]) {
+      samePartsLength = i;
+      break;
+    }
+  }
+
+  var outputParts = [];
+  for (var i = samePartsLength; i < fromParts.length; i++) {
+    outputParts.push('..');
+  }
+
+  outputParts = outputParts.concat(toParts.slice(samePartsLength));
+
+  return outputParts.join('/');
+};
+
+exports.sep = '/';
+exports.delimiter = ':';
+
+exports.dirname = function(path) {
+  var result = splitPath(path),
+      root = result[0],
+      dir = result[1];
+
+  if (!root && !dir) {
+    // No dirname whatsoever
+    return '.';
+  }
+
+  if (dir) {
+    // It has a dirname, strip trailing slash
+    dir = dir.substr(0, dir.length - 1);
+  }
+
+  return root + dir;
+};
+
+
+exports.basename = function(path, ext) {
+  var f = splitPath(path)[2];
+  // TODO: make this comparison case-insensitive on windows?
+  if (ext && f.substr(-1 * ext.length) === ext) {
+    f = f.substr(0, f.length - ext.length);
+  }
+  return f;
+};
+
+
+exports.extname = function(path) {
+  return splitPath(path)[3];
+};
+
+function filter (xs, f) {
+    if (xs.filter) return xs.filter(f);
+    var res = [];
+    for (var i = 0; i < xs.length; i++) {
+        if (f(xs[i], i, xs)) res.push(xs[i]);
+    }
+    return res;
+}
+
+// String.prototype.substr - negative index don't work in IE8
+var substr = 'ab'.substr(-1) === 'b'
+    ? function (str, start, len) { return str.substr(start, len) }
+    : function (str, start, len) {
+        if (start < 0) start = str.length + start;
+        return str.substr(start, len);
+    }
+;
+
+}).call(this,require('_process'))
+},{"_process":13}],13:[function(require,module,exports){
+// shim for using process in browser
+var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+function defaultSetTimout() {
+    throw new Error('setTimeout has not been defined');
+}
+function defaultClearTimeout () {
+    throw new Error('clearTimeout has not been defined');
+}
+(function () {
+    try {
+        if (typeof setTimeout === 'function') {
+            cachedSetTimeout = setTimeout;
+        } else {
+            cachedSetTimeout = defaultSetTimout;
+        }
+    } catch (e) {
+        cachedSetTimeout = defaultSetTimout;
+    }
+    try {
+        if (typeof clearTimeout === 'function') {
+            cachedClearTimeout = clearTimeout;
+        } else {
+            cachedClearTimeout = defaultClearTimeout;
+        }
+    } catch (e) {
+        cachedClearTimeout = defaultClearTimeout;
+    }
+} ())
+function runTimeout(fun) {
+    if (cachedSetTimeout === setTimeout) {
+        //normal enviroments in sane situations
+        return setTimeout(fun, 0);
+    }
+    // if setTimeout wasn't available but was latter defined
+    if ((cachedSetTimeout === defaultSetTimout || !cachedSetTimeout) && setTimeout) {
+        cachedSetTimeout = setTimeout;
+        return setTimeout(fun, 0);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedSetTimeout(fun, 0);
+    } catch(e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't trust the global object when called normally
+            return cachedSetTimeout.call(null, fun, 0);
+        } catch(e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error
+            return cachedSetTimeout.call(this, fun, 0);
+        }
+    }
+
+
+}
+function runClearTimeout(marker) {
+    if (cachedClearTimeout === clearTimeout) {
+        //normal enviroments in sane situations
+        return clearTimeout(marker);
+    }
+    // if clearTimeout wasn't available but was latter defined
+    if ((cachedClearTimeout === defaultClearTimeout || !cachedClearTimeout) && clearTimeout) {
+        cachedClearTimeout = clearTimeout;
+        return clearTimeout(marker);
+    }
+    try {
+        // when when somebody has screwed with setTimeout but no I.E. maddness
+        return cachedClearTimeout(marker);
+    } catch (e){
+        try {
+            // When we are in I.E. but the script has been evaled so I.E. doesn't  trust the global object when called normally
+            return cachedClearTimeout.call(null, marker);
+        } catch (e){
+            // same as above but when it's a version of I.E. that must have the global object for 'this', hopfully our context correct otherwise it will throw a global error.
+            // Some versions of I.E. have different rules for clearTimeout vs setTimeout
+            return cachedClearTimeout.call(this, marker);
+        }
+    }
+
+
+
+}
+var queue = [];
+var draining = false;
+var currentQueue;
+var queueIndex = -1;
+
+function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
+    draining = false;
+    if (currentQueue.length) {
+        queue = currentQueue.concat(queue);
+    } else {
+        queueIndex = -1;
+    }
+    if (queue.length) {
+        drainQueue();
+    }
+}
+
+function drainQueue() {
+    if (draining) {
+        return;
+    }
+    var timeout = runTimeout(cleanUpNextTick);
+    draining = true;
+
+    var len = queue.length;
+    while(len) {
+        currentQueue = queue;
+        queue = [];
+        while (++queueIndex < len) {
+            if (currentQueue) {
+                currentQueue[queueIndex].run();
+            }
+        }
+        queueIndex = -1;
+        len = queue.length;
+    }
+    currentQueue = null;
+    draining = false;
+    runClearTimeout(timeout);
+}
+
+process.nextTick = function (fun) {
+    var args = new Array(arguments.length - 1);
+    if (arguments.length > 1) {
+        for (var i = 1; i < arguments.length; i++) {
+            args[i - 1] = arguments[i];
+        }
+    }
+    queue.push(new Item(fun, args));
+    if (queue.length === 1 && !draining) {
+        runTimeout(drainQueue);
+    }
+};
+
+// v8 likes predictible objects
+function Item(fun, array) {
+    this.fun = fun;
+    this.array = array;
+}
+Item.prototype.run = function () {
+    this.fun.apply(null, this.array);
+};
+process.title = 'browser';
+process.browser = true;
+process.env = {};
+process.argv = [];
+process.version = ''; // empty string to avoid regexp issues
+process.versions = {};
+
+function noop() {}
+
+process.on = noop;
+process.addListener = noop;
+process.once = noop;
+process.off = noop;
+process.removeListener = noop;
+process.removeAllListeners = noop;
+process.emit = noop;
+process.prependListener = noop;
+process.prependOnceListener = noop;
+
+process.listeners = function (name) { return [] }
+
+process.binding = function (name) {
+    throw new Error('process.binding is not supported');
+};
+
+process.cwd = function () { return '/' };
+process.chdir = function (dir) {
+    throw new Error('process.chdir is not supported');
+};
+process.umask = function() { return 0; };
+
+},{}],14:[function(require,module,exports){
 (function (global){
 /*
 ** Copyright (c) 2012 The Khronos Group Inc.
@@ -7442,7 +7858,7 @@ return {
 module.exports = WebGLDebugUtils;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],12:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 'use strict';
 
 var AssetsConfig = {};
@@ -7461,7 +7877,7 @@ AssetsConfig.bgms = {
 
 module.exports = AssetsConfig;
 
-},{}],13:[function(require,module,exports){
+},{}],16:[function(require,module,exports){
 'use strict';
 var glmatrix = require("gl-matrix");
 
@@ -7545,7 +7961,7 @@ Camera.prototype.updateMatrix = function(env) {
 
 module.exports = Camera;
 
-},{"gl-matrix":1}],14:[function(require,module,exports){
+},{"gl-matrix":2}],17:[function(require,module,exports){
 'use strict';
 var DEBUG = require("./debug_constant");
 
@@ -7558,7 +7974,7 @@ if (DEBUG.ON) {
 }
 module.exports = CONSTANT;
 
-},{"./debug_constant":16}],15:[function(require,module,exports){
+},{"./debug_constant":19}],18:[function(require,module,exports){
 'use strict';
 var programs = require("./programs");
 var PointLight = require("./point_light");
@@ -7592,7 +8008,7 @@ function setLightUniforms(gl, prog) {
 }
 module.exports = CreateData;
 
-},{"./point_light":36,"./programs":37}],16:[function(require,module,exports){
+},{"./point_light":41,"./programs":42}],19:[function(require,module,exports){
 'use strict';
 var DEBUG = {
 	ON: true,
@@ -7602,7 +8018,7 @@ var DEBUG = {
 
 module.exports = DEBUG;
 
-},{}],17:[function(require,module,exports){
+},{}],20:[function(require,module,exports){
 'use strict';
 var randInt = function(min,max) {
 	if (max == null) {
@@ -7877,7 +8293,7 @@ var Dungeon = function(tileDim, roomDim, roomMinSize) {
 
 module.exports = Dungeon;
 
-},{}],18:[function(require,module,exports){
+},{}],21:[function(require,module,exports){
 'use strict';
 var Dungeon = require("./dungeon");
 
@@ -7947,7 +8363,7 @@ var DungeonConvert = function(level) {
 };
 module.exports = DungeonConvert;
 
-},{"./dungeon":17}],19:[function(require,module,exports){
+},{"./dungeon":20}],22:[function(require,module,exports){
 'use strict';
 var core = require('./hakurei').core;
 var util = require('./hakurei').util;
@@ -7985,7 +8401,7 @@ Game.prototype.stopBGM = function () {
 
 module.exports = Game;
 
-},{"./constant":14,"./gl":20,"./hakurei":21,"./scene/loading":38,"./scene/stage":39}],20:[function(require,module,exports){
+},{"./constant":17,"./gl":23,"./hakurei":24,"./scene/loading":43,"./scene/stage":44}],23:[function(require,module,exports){
 'use strict';
 
 var WebGLDebugUtils = require("webgl-debug");
@@ -8007,12 +8423,12 @@ var createWebGLContext = function (canvas) {
 
 module.exports = createWebGLContext;
 
-},{"webgl-debug":11}],21:[function(require,module,exports){
+},{"webgl-debug":14}],24:[function(require,module,exports){
 'use strict';
 
 module.exports = require("./hakureijs/index");
 
-},{"./hakureijs/index":27}],22:[function(require,module,exports){
+},{"./hakureijs/index":30}],25:[function(require,module,exports){
 'use strict';
 
 var AudioLoader = function() {
@@ -8186,7 +8602,7 @@ AudioLoader.prototype.progress = function() {
 
 module.exports = AudioLoader;
 
-},{}],23:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
 
 var FontLoader = function() {
@@ -8212,7 +8628,7 @@ FontLoader.prototype.progress = function() {
 
 module.exports = FontLoader;
 
-},{}],24:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 'use strict';
 
 var ImageLoader = function() {
@@ -8266,7 +8682,7 @@ ImageLoader.prototype.progress = function() {
 
 module.exports = ImageLoader;
 
-},{}],25:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 'use strict';
 
 var Constant = {
@@ -8282,7 +8698,7 @@ var Constant = {
 
 module.exports = Constant;
 
-},{}],26:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 var CONSTANT = require("./constant");
 var ImageLoader = require("./asset_loader/image");
@@ -8323,9 +8739,6 @@ Core.prototype.init = function () {
 
 	this.current_keyflag = 0x0;
 	this.before_keyflag = 0x0;
-
-
-	this.is_connect_gamepad = false;
 
 	this.image_loader.init();
 };
@@ -8538,7 +8951,7 @@ Core.prototype.setupEvents = function() {
 
 module.exports = Core;
 
-},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25}],27:[function(require,module,exports){
+},{"./asset_loader/audio":25,"./asset_loader/font":26,"./asset_loader/image":27,"./constant":28}],30:[function(require,module,exports){
 'use strict';
 module.exports = {
 	util: require("./util"),
@@ -8555,11 +8968,17 @@ module.exports = {
 	},
 	asset_loader: {
 		image: require("./asset_loader/image"),
-		//sound: require("./asset_loader/sound"),
+		audio: require("./asset_loader/audio"),
+		font:  require("./asset_loader/font"),
 	},
+	storage: {
+		base: require("./storage/base"),
+		save: require("./storage/save"),
+	},
+
 };
 
-},{"./asset_loader/image":24,"./constant":25,"./core":26,"./object/base":28,"./object/pool_manager":29,"./object/sprite":30,"./scene/base":31,"./serif_manager":32,"./util":33}],28:[function(require,module,exports){
+},{"./asset_loader/audio":25,"./asset_loader/font":26,"./asset_loader/image":27,"./constant":28,"./core":29,"./object/base":31,"./object/pool_manager":32,"./object/sprite":33,"./scene/base":34,"./serif_manager":35,"./storage/base":36,"./storage/save":37,"./util":38}],31:[function(require,module,exports){
 'use strict';
 
 var util = require('../util');
@@ -8783,7 +9202,7 @@ ObjectBase.prototype.setVelocity = function(velocity) {
 module.exports = ObjectBase;
 
 
-},{"../util":33}],29:[function(require,module,exports){
+},{"../util":38}],32:[function(require,module,exports){
 'use strict';
 
 // TODO: add pooling logic
@@ -8870,7 +9289,7 @@ PoolManager.prototype.checkCollisionWithManager = function(manager) {
 
 module.exports = PoolManager;
 
-},{"../util":33,"./base":28}],30:[function(require,module,exports){
+},{"../util":38,"./base":31}],33:[function(require,module,exports){
 'use strict';
 var base_object = require('./base');
 var util = require('../util');
@@ -9008,7 +9427,7 @@ Sprite.prototype.isReflect = function(){
 
 module.exports = Sprite;
 
-},{"../util":33,"./base":28}],31:[function(require,module,exports){
+},{"../util":38,"./base":31}],34:[function(require,module,exports){
 'use strict';
 
 var SceneBase = function(core, scene) {
@@ -9115,7 +9534,7 @@ SceneBase.prototype.y = function(val) {
 module.exports = SceneBase;
 
 
-},{}],32:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 'use strict';
 
 var SerifManager = function () {
@@ -9269,10 +9688,197 @@ SerifManager.prototype.lines = function () {
 
 module.exports = SerifManager;
 
-},{}],33:[function(require,module,exports){
+},{}],36:[function(require,module,exports){
+(function (process){
+'use strict';
+
+/*
+ * TODO: split load and save method by sync and async
+ * TODO: compress save data
+ * TODO: implement: defineColumnProperty method
+ */
+
+
+
+var DEFAULT_KEY = "hakurei_engine_game:default";
+
+var StorageBase = function (data) {
+	if(!data) data = {};
+	this._data = data;
+};
+
+// save file unique key
+// this constant must be overridden!
+StorageBase.KEY = function() {
+	return DEFAULT_KEY;
+};
+
+
+// is Electron or NW.js ?
+StorageBase.isLocalMode = function() {
+	return typeof require === 'function' && typeof process === 'object' && process.title !== 'browser';
+};
+
+StorageBase.prototype.save = function() {
+	var Klass = this.constructor;
+	if (Klass.isLocalMode()) {
+		this._saveToLocalFile();
+	}
+	else {
+		this._saveToWebStorage();
+
+	}
+};
+
+StorageBase.prototype._saveToLocalFile = function() {
+	var Klass = this.constructor;
+	var fs = require('fs');
+
+	var data = JSON.stringify(this._data);
+
+	var dir_path = Klass._localFileDirectoryPath();
+
+	var file_path = dir_path + Klass._localFileName(Klass.KEY());
+
+	if (!fs.existsSync(dir_path)) {
+		fs.mkdirSync(dir_path);
+	}
+	fs.writeFileSync(file_path, data);
+};
+
+// save file directory
+StorageBase._localFileDirectoryPath = function() {
+	var path = require('path');
+
+	var base = path.dirname(process.mainModule.filename);
+	return path.join(base, 'save/');
+};
+
+StorageBase._localFileName = function(key) {
+	return key + ".json";
+};
+
+StorageBase._localFilePath = function(key) {
+	return this._localFileDirectoryPath() + this._localFileName(key);
+};
+
+StorageBase.prototype._saveToWebStorage = function() {
+	var Klass = this.constructor;
+
+	var key = Klass.KEY();
+	var data = JSON.stringify(this._data);
+	try {
+		window.localStorage.setItem(key, data);
+	}
+	catch (e) {
+	}
+};
+
+StorageBase.load = function() {
+	if (this.isLocalMode()) {
+		return this._loadFromLocalFile();
+	}
+	else {
+		return this._loadFromWebStorage();
+	}
+};
+
+StorageBase._loadFromLocalFile = function() {
+	var fs = require('fs');
+
+	var file_path = this.localFilePath(this.KEY());
+	if (!fs.existsSync()) return null;
+
+	var data = fs.readFileSync(file_path, { encoding: 'utf8' });
+
+	var Klass = this;
+	if (data) {
+		return new Klass(JSON.parse(data));
+	}
+	else {
+		return null;
+	}
+};
+
+StorageBase._loadFromWebStorage = function() {
+	var key = this.KEY();
+	var data;
+	try {
+		data = window.localStorage.getItem(key);
+	}
+	catch (e) {
+	}
+
+	var Klass = this;
+	if (data) {
+		return new Klass(JSON.parse(data));
+	}
+	else {
+		return null;
+	}
+
+};
+
+StorageBase.prototype.del = function() {
+	var Klass = this.constructor;
+	if (Klass.isLocalMode()) {
+		this._removeLocalFile();
+	}
+	else {
+		this._removeWebStorage();
+	}
+};
+
+StorageBase.prototype._removeLocalFile = function() {
+	var Klass = this.constructor;
+	var fs = require('fs');
+	var file_path = this.localFilePath(Klass.KEY());
+
+	if (fs.existsSync(file_path)) {
+		fs.unlinkSync(file_path);
+	}
+};
+
+StorageBase.prototype._removeWebStorage = function() {
+	var Klass = this.constructor;
+	var key = Klass.KEY();
+	try {
+		window.localStorage.removeItem(key);
+	}
+	catch (e) {
+	}
+};
+
+module.exports = StorageBase;
+
+}).call(this,require('_process'))
+},{"_process":13,"fs":1,"path":12}],37:[function(require,module,exports){
+'use strict';
+var base_class = require('./base');
+var util = require('../util');
+
+var StorageSave = function(scene) {
+	base_class.apply(this, arguments);
+};
+util.inherit(StorageSave, base_class);
+
+StorageSave.KEY = function(){
+	var key = "hakurei_engine_game:save";
+	if (window && window.location) {
+		return(key + ":" + window.location.pathname);
+	}
+	else {
+		return key;
+	}
+};
+
+module.exports = StorageSave;
+
+},{"../util":38,"./base":36}],38:[function(require,module,exports){
 'use strict';
 var Util = {
 	inherit: function( child, parent ) {
+		// inherit instance methods
 		var getPrototype = function(p) {
 			if(Object.create) return Object.create(p);
 
@@ -9282,6 +9888,11 @@ var Util = {
 		};
 		child.prototype = getPrototype(parent.prototype);
 		child.prototype.constructor = child;
+
+		// inherit static methods
+		for (var func_name in parent) {
+			child[func_name] = parent[func_name];
+		}
 	},
 	radianToTheta: function(radian) {
 		return (radian * 180 / Math.PI) | 0;
@@ -9307,7 +9918,7 @@ var Util = {
 
 module.exports = Util;
 
-},{}],34:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 var Level = function(ambient,floorTiles,wallTiles,tileDim,roomDim,roomMinSize) {
 	this.tileDim = tileDim;
@@ -9334,7 +9945,7 @@ Level.getLevel = function(l) {
 };
 module.exports = Level;
 
-},{}],35:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 'use strict';
 var Game = require('./game');
 
@@ -9377,7 +9988,7 @@ window.changeFullScreen = function () {
 	game.fullscreen();
 };
 
-},{"./game":19}],36:[function(require,module,exports){
+},{"./game":22}],41:[function(require,module,exports){
 'use strict';
 var PointLight = function(color, position, attenuation, enabled) {
 	this.color = color ? color : [1.0, 1.0, 1.0];
@@ -9395,7 +10006,7 @@ PointLight.prototype.update = function() {
 };
 module.exports = PointLight;
 
-},{}],37:[function(require,module,exports){
+},{}],42:[function(require,module,exports){
 'use strict';
 var glmat = require("gl-matrix");
 var worldV = require("./shader/world.vs");
@@ -9537,7 +10148,7 @@ var programs = function (gl) {
 };
 module.exports = programs;
 
-},{"./shader/billboard.vs":40,"./shader/depth.fs":41,"./shader/depth.vs":42,"./shader/world.fs":43,"./shader/world.vs":44,"gl-matrix":1}],38:[function(require,module,exports){
+},{"./shader/billboard.vs":45,"./shader/depth.fs":46,"./shader/depth.vs":47,"./shader/world.fs":48,"./shader/world.vs":49,"gl-matrix":2}],43:[function(require,module,exports){
 'use strict';
 
 // ローディングシーン
@@ -9631,7 +10242,7 @@ SceneLoading.prototype.progress = function(){
 
 module.exports = SceneLoading;
 
-},{"../assets_config":12,"../hakurei":21}],39:[function(require,module,exports){
+},{"../assets_config":15,"../hakurei":24}],44:[function(require,module,exports){
 'use strict';
 
 // utils
@@ -9885,22 +10496,22 @@ SceneLoading.prototype.handleInputs = function() {
 };
 module.exports = SceneLoading;
 
-},{"../assets_config":12,"../camera":13,"../data":15,"../dungeon_convert":18,"../gl":20,"../hakurei":21,"../level":34,"../point_light":36,"../sprites":46,"../terrain":47,"../texture":48,"gl-matrix":1}],40:[function(require,module,exports){
+},{"../assets_config":15,"../camera":16,"../data":18,"../dungeon_convert":21,"../gl":23,"../hakurei":24,"../level":39,"../point_light":41,"../sprites":51,"../terrain":52,"../texture":53,"gl-matrix":2}],45:[function(require,module,exports){
 module.exports = "#define M_PI 3.1415926535897932384626433832795\n\nattribute vec3 aPosition;\nattribute vec3 aOffset;\nattribute vec2 aTexture;\nattribute float aMoving;\nattribute float aFlipped;\n\nuniform vec3 uCamPos;\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\nuniform float uCounter;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nconst vec3 camUp = vec3(0.0, 0.0, 1.0);\n\nvoid main(void) {\n\t// Billboarding\n\tvec3 look = normalize(uCamPos - aPosition);\n\tvec3 right = normalize(cross(camUp, look));\n\tvec3 up = normalize(cross(look, right));\n\n\tvec3 offset = aOffset;\n\tif (aMoving > 0.5 && offset.z < 0.5) {\n\t\t// Walking wobble animation\n\t\tfloat t = mod(1.5*uCounter/M_PI,2.0*M_PI);\n\t\tt = (abs(t-M_PI)-0.5*M_PI)*0.25;\n\t\tfloat x = offset.x;\n\t\tfloat z = offset.z;\n\t\tfloat c = cos(t);\n\t\tfloat s = sin(t);\n\t\toffset.x = x*c - z*s;\n\t\toffset.z = x*s + z*c;\n\t\tif (x < 0.0)\n\t\t\toffset.z *= 0.70;\n\t}\n\telse {\n\t\t// Idle wobble animation\n\t\tfloat t = mod(uCounter/M_PI,2.0*M_PI);\n\n\t\tvec3 mult = vec3(0.05, 0.0, 0.13);\n\t\tif (offset.x < 0.0)\n\t\t\tmult.x *= -1.0;\n\t\tif (offset.z > 0.5)\n\t\t\tmult.z *= -1.0;\n\t\telse\n\t\t\tmult.z = 0.0;\n\n\t\toffset.x += sin(t)*mult.x;\n\t\toffset.z += cos(t)*mult.z;\n\t}\n\tif (aFlipped > 0.5)\n\t\toffset.x *= -1.0;\n\n\t// Thanks to http://www.gamedev.net/topic/385785-billboard-shader/#entry3550648\n\tvec3 vR = offset.x*right;\n\tvec3 vU = offset.z*up;\n\tvec4 d = vec4(vR+vU+look*0.5, 0.0);\n\tvPosition = vWorldVertex =  uMMatrix * (vec4(aPosition, 1.0) + d);\n\n\tvWorldNormal = look;\n\tvTexture = aTexture;\n\n\tgl_Position = uPMatrix * uVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],41:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nvarying vec4 vPosition;\n\n// Via http://devmaster.net/posts/3002/shader-effects-shadow-mapping\nvec4 pack(float depth) {\n\tconst vec4 bias = vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);\n\n\tfloat r = depth;\n\tfloat g = fract(r*255.0);\n\tfloat b = fract(g*255.0);\n\tfloat a = fract(b*255.0);\n\tvec4 color = vec4(r, g, b, a);\n\n\treturn color - (color.yzww * bias);\n}\n\nvoid main(void) {\n\tfloat linearDepth = length(vPosition) * LinearDepthConstant;\n\t/*gl_FragColor = pack(linearDepth);*/\n\tgl_FragColor = vec4(1.0,0.0,1.0,1.0);\n}\n\n";
 
-},{}],42:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\n\nuniform mat4 uVMatrix;\nuniform mat4 uMMatrix;\nuniform mat4 uPMatrix;\n\nvarying vec4 vPosition;\n\nvoid main(void) {\n\tvPosition = uVMatrix * uMMatrix * vec4(aPosition + vec3(-8,-8,-8), 1.0);\n\tvPosition += vec4(0,0,-16,0);\n\tvPosition = vec4(aPosition, 1.0);\n\tgl_Position = uPMatrix * vPosition;\n}\n\n";
 
-},{}],43:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nstruct PointLight\n{\n\tfloat enabled;\n\tvec3 color;\n\tvec3 position;\n\tvec3 attenuation;\n};\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nuniform PointLight uLight[4];\nuniform sampler2D uDepthMap;\n\nuniform sampler2D uSampler; // texture coords\nuniform vec3 uAmbientColor;\n\nfloat unpack(vec4 color)\n{\n\tconst vec4 bitShifts = vec4(1.0, 1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0));\n\treturn dot(color, bitShifts);\n}\n\nvoid main(void) {\n\tvec3 normal = normalize(vWorldNormal);\n\tvec4 texColor = texture2D(uSampler, vec2(vTexture.s, vTexture.t));\n\tif (texColor.a < 0.1) // Transparent textures\n\t\tdiscard;\n\n\tvec3 color = uAmbientColor;\n\n\tfor (int i=0; i<4; i++) {\n\t\tif (uLight[i].enabled < 0.5)\n\t\t\tcontinue;\n\t\tvec3 lightVec = normalize(uLight[i].position - vWorldVertex.xyz);\n\t\tfloat l = dot(normal, lightVec);\n\n\t\tif (l <= 0.0)\n\t\t\tcontinue;\n\n\t\tfloat d = distance(vWorldVertex.xyz, uLight[i].position);\n\t\tfloat a = 1.0/(\n\t\t\tuLight[i].attenuation.x +\n\t\t\tuLight[i].attenuation.y*d + \n\t\t\tuLight[i].attenuation.z*d*d\n\t\t);\n\t\tcolor += l*a*uLight[i].color;\n\t}\n\n\t//vec3 depth = vPosition.xyz / vPosition.w;\n\t//depth.z = length(vWorldVertex.xyz - uLight[0].position) * LinearDepthConstant;\n\tfloat shadow = 1.0;\n\n\t//depth.z *= 0.96; // Offset depth \n\t//if (depth.z > unpack(texture2D(uDepthMap, depth.xy)))\n\t\t//shadow *= 0.5;\n\n\tgl_FragColor = clamp(vec4(texColor.rgb*color*shadow, texColor.a), 0.0, 1.0);\n}\n\n";
 
-},{}],44:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aTexture;\n\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\n\nuniform mat4 uLightVMatrix;\nuniform mat4 uLightPMatrix;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nvoid main(void) {\n\tvWorldVertex = uMMatrix * vec4(aPosition, 1.0);\n\tvec4 viewVertex = uVMatrix * vWorldVertex;\n\tgl_Position = uPMatrix * viewVertex;\n\n\tvTexture = aTexture;\n\tvWorldNormal = normalize(mat3(uMMatrix) * aNormal);\n\n\tvPosition = uLightPMatrix * uLightVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],45:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 var Sprite = function(pos) {
 	this.pos = pos ? pos : [0,0,0];
@@ -9959,7 +10570,7 @@ Sprite.prototype.checkCollision = function(env) {
 };
 module.exports = Sprite;
 
-},{}],46:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 'use strict';
 var Sprite = require("./sprite");
 
@@ -10073,7 +10684,7 @@ Sprites.prototype.offsetSprite = function(spriteId, d) {
 
 module.exports = Sprites;
 
-},{"./sprite":45}],47:[function(require,module,exports){
+},{"./sprite":50}],52:[function(require,module,exports){
 'use strict';
 
 /* 地形 */
@@ -10306,7 +10917,7 @@ Terrain.prototype.specialTiles = {
 };
 module.exports = Terrain;
 
-},{}],48:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 'use strict';
 var TextureAtlas = function(gl, image, tileSize) {
 	this.gl = gl;
@@ -10351,4 +10962,4 @@ TextureAtlas.prototype.getST = function(tileNum) {
 
 module.exports = TextureAtlas;
 
-},{}]},{},[35]);
+},{}]},{},[40]);
