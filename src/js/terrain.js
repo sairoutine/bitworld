@@ -226,4 +226,4 @@ Terrain.prototype.specialTiles = {
 	166: [182,182,166,183], 182: 166, 183: 166, // enchant table
 	176: [192,192,176,208], 192: 176, 208: 176 // sandstone
 };
-
+module.exports = Terrain;
