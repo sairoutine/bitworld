@@ -25,17 +25,17 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
-	var canvas = document.getElementById('subCanvas');
-	var gtx = createWebGLContext(canvas);
+	this.canvas = document.getElementById('subCanvas');
+	this.gl = createWebGLContext(this.canvas);
 
 	var texture = {};
-	texture.land    = new TextureAtlas(gtx, this.core.image_loader.getImage("ldfaithful"), 8);
-	texture.sprites = new TextureAtlas(gtx, this.core.image_loader.getImage("oryx"), 8);
+	texture.land    = new TextureAtlas(this.gl, this.core.image_loader.getImage("ldfaithful"), 8);
+	texture.sprites = new TextureAtlas(this.gl, this.core.image_loader.getImage("oryx"), 8);
 
 	this.counter = 0; // TODO: frame_count に置き換える
 
 	// 地形
-	this.terrain = new Terrain(gtx, texture.land);
+	this.terrain = new Terrain(this.gl, texture.land);
 	// カメラ
 	this.camera = new Camera();
 
@@ -49,7 +49,7 @@ SceneLoading.prototype.init = function() {
 	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
-	this.sprites = new Sprites(gtx, texture.sprites);
+	this.sprites = new Sprites(this.gl, texture.sprites);
 	this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
 
 	// プレイヤー
@@ -71,7 +71,26 @@ SceneLoading.prototype.beforeDraw = function() {
 
 };
 SceneLoading.prototype.draw = function(){
+	/*
+	this.gl.clearColor.apply(this,data.background);
+	this.gl.clear(this.gl.COLOR_BUFFER_BIT|this.gl.DEPTH_BUFFER_BIT);
 
+	this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
+	this.glmat.mat4.perspective(data.world.m.pMatrix, 45.0, this.canvas.width/this.canvas.height, 0.1, 100.0);
+
+	//handleInputs();
+
+	this.lights[0].position = this.player.pos.slice(0);
+	this.lights[0].position[2] += 2;
+	this.sprites.sprites[1].moveToward(this.terrain, this.player.pos);
+	this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
+	this.camera.updateMatrix(this.terrain.cubes);
+
+	checkStairs();
+
+	renderWorld();
+	renderSprites();
+	*/
 
 };
 
@@ -172,24 +191,6 @@ SceneLoading.prototype.draw = function(){
 		}
 
 		function display() {
-			gl.clearColor.apply(this,data.background);
-			gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-
-			gl.viewport(0, 0, canvas.width, canvas.height);
-			glmat.mat4.perspective(data.world.m.pMatrix, 45.0, canvas.width/canvas.height, 0.1, 100.0);
-
-			handleInputs();
-
-			this.lights[0].position = this.player.pos.slice(0);
-			this.lights[0].position[2] += 2;
-			this.sprites.sprites[1].moveToward(this.terrain, this.player.pos);
-			this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
-			this.camera.updateMatrix(this.terrain.cubes);
-
-			checkStairs();
-
-			renderWorld();
-			renderSprites();
 		}
 
 		function checkStairs() {
