@@ -15,9 +15,6 @@ util.inherit(Game, core);
 Game.prototype.init = function () {
 	core.prototype.init.apply(this, arguments);
 
-	// WebGL
-	this.gtx = createWebGL(this.canvas_dom);
-
 	this.addScene("loading", new SceneLoading(this));
 	this.addScene("stage", new SceneStage(this));
 

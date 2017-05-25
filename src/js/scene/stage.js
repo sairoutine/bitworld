@@ -1,5 +1,11 @@
 'use strict';
 
+Number.prototype.clamp = function(min, max) {
+	return (this < min ? min : (this > max ? max : this));
+};
+
+
+
 var base_scene = require('../hakurei').scene.base;
 var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
@@ -9,6 +15,7 @@ var Terrain = require('../terrain');
 var Camera = require('../camera');
 var Level = require('../level');
 var PointLight = require('../point_light');
+var Sprites = require('../sprites');
 
 var SceneLoading = function(core) {
 	base_scene.apply(this, arguments);
@@ -42,22 +49,21 @@ SceneLoading.prototype.init = function() {
 	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
-};
+	this.sprites = new Sprites(gtx, texture.sprites);
+	this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
 
+	// プレイヤー
+	this.player = this.sprites.sprites[0];
+
+	// (恐らく)プレイヤーについてくるやつ
+	this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,1]);
+
+	this.sprites.sprites[1].maxSpeed *= 0.8;
 /*
-
-
-		this.sprites = null;
-		this.sprites = new sprites.Sprites(texture.sprites);
-		this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
-		this.player = this.sprites.sprites[0];
-
-		this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,1]);
-		this.sprites.sprites[1].maxSpeed *= 0.8;
-
 		goToLevel(this.levelNum);
 */
 
+};
 
 
 SceneLoading.prototype.beforeDraw = function() {
@@ -197,5 +203,35 @@ SceneLoading.prototype.draw = function(){
 		}
 	}
 */
+/*
+		function handleInputs() {
+			var inputMask = 0;
+			if (input.pressedKeys[87]) inputMask += 1; // W
+			if (input.pressedKeys[65]) inputMask += 2; // A
+			if (input.pressedKeys[83]) inputMask += 4; // S
+			if (input.pressedKeys[68]) inputMask += 8; // D
 
+			switch(inputMask) {
+			case  1: this.player.turnAndMove(this.terrain, 0); break;
+			case  2: this.player.flipped = 1; this.player.turnAndMove(this.terrain, Math.PI/2); break;
+			case  3: this.player.flipped = 1; this.player.turnAndMove(this.terrain, Math.PI/4); break;
+			case  4: this.player.turnAndMove(this.terrain, Math.PI); break;
+			case  6: this.player.flipped = 1; this.player.turnAndMove(this.terrain, 3/4*Math.PI); break;
+			case  8: this.player.flipped = 0; this.player.turnAndMove(this.terrain,-Math.PI/2); break;
+			case  9: this.player.flipped = 0; this.player.turnAndMove(this.terrain,-Math.PI/4); break;
+			case 12: this.player.flipped = 0; this.player.turnAndMove(this.terrain, 5/4*Math.PI); break;
+			}
+
+			if (input.rightClick) {
+				var angleChange = [-input.mouseMove[1]*data.rotateSpeed, 0, input.mouseMove[0]*data.rotateSpeed];
+				this.camera.changeAngle(angleChange);
+			}
+
+			input.mouseMove = [0,0];
+			if (input.scroll) {
+				this.camera.changeDistance(input.scroll);
+				input.scroll = 0;
+			}
+		}
+*/
 module.exports = SceneLoading;
