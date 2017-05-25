@@ -9840,7 +9840,23 @@ SceneLoading.prototype.checkStairs = function() {
 };
 
 SceneLoading.prototype.handleInputs = function() {
-	if(this.core.isKeyDown(CONSTANT.BUTTON_UP)) {
+	if(this.core.isKeyDown(CONSTANT.BUTTON_UP) && this.core.isKeyDown(CONSTANT.BUTTON_LEFT)) {
+		this.player.flipped = 1;
+		this.player.turnAndMove(this.terrain, Math.PI/4);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_DOWN) && this.core.isKeyDown(CONSTANT.BUTTON_LEFT)) {
+		this.player.flipped = 1;
+		this.player.turnAndMove(this.terrain, 3/4*Math.PI);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_UP) && this.core.isKeyDown(CONSTANT.BUTTON_RIGHT)) {
+		this.player.flipped = 0;
+		this.player.turnAndMove(this.terrain,-Math.PI/4);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_DOWN) && this.core.isKeyDown(CONSTANT.BUTTON_RIGHT)) {
+		this.player.flipped = 0;
+		this.player.turnAndMove(this.terrain, 5/4*Math.PI);
+	}
+	else if(this.core.isKeyDown(CONSTANT.BUTTON_UP)) {
 		this.player.turnAndMove(this.terrain, 0);
 	}
 	else if(this.core.isKeyDown(CONSTANT.BUTTON_LEFT)) {
@@ -9854,14 +9870,7 @@ SceneLoading.prototype.handleInputs = function() {
 		this.player.flipped = 0;
 		this.player.turnAndMove(this.terrain,-Math.PI/2);
 	}
-
-	//case  3: this.player.flipped = 1; this.player.turnAndMove(this.terrain, Math.PI/4); break;
-	//case  6: this.player.flipped = 1; this.player.turnAndMove(this.terrain, 3/4*Math.PI); break;
-	//case  9: this.player.flipped = 0; this.player.turnAndMove(this.terrain,-Math.PI/4); break;
-	//case 12: this.player.flipped = 0; this.player.turnAndMove(this.terrain, 5/4*Math.PI); break;
-	//
-	//
-/*
+	/*
 			if (input.rightClick) {
 				var angleChange = [-input.mouseMove[1]*this.data.rotateSpeed, 0, input.mouseMove[0]*this.data.rotateSpeed];
 				this.camera.changeAngle(angleChange);
@@ -9872,7 +9881,7 @@ SceneLoading.prototype.handleInputs = function() {
 				this.camera.changeDistance(input.scroll);
 				input.scroll = 0;
 			}
-*/
+	*/
 };
 module.exports = SceneLoading;
 
