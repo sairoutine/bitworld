@@ -1,10 +1,9 @@
 'use strict';
-/* global glmat */
 var glmatrix = require("gl-matrix");
 
 var Camera = function() {
-	this.matrix = glmat.mat4.create();
-	glmat.mat4.identity(this.matrix);
+	this.matrix = glmatrix.mat4.create();
+	glmatrix.mat4.identity(this.matrix);
 
 	this.theta = [1.7*Math.PI, 0.0, 0.5*Math.PI]; // Rotation about X and Z axes
 	this.center = [0, 0, 0];
@@ -93,7 +92,7 @@ Camera.prototype.updateMatrix = function(env) {
 	}
 
 	this.pos = this.sphericalToCartesian(this.center, this.currentDistance, this.theta);
-	glmat.mat4.lookAt(this.matrix, this.pos, this.center, this.up);
+	glmatrix.mat4.lookAt(this.matrix, this.pos, this.center, this.up);
 };
 
 module.exports = Camera;

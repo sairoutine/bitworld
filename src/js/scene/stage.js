@@ -6,6 +6,7 @@ var AssetsConfig = require('../assets_config');
 var createWebGLContext = require('../gl');
 var TextureAtlas = require('../texture');
 var Terrain = require('../terrain');
+var Camera = require('../camera');
 
 var SceneLoading = function(core) {
 	base_scene.apply(this, arguments);
@@ -24,14 +25,13 @@ SceneLoading.prototype.init = function() {
 
 	this.counter = 0; // TODO: frame_count に置き換える
 
+	// 地形
 	this.terrain = new Terrain(gtx, texture.land);
+	// カメラ
+	this.camera = new Camera();
 };
 
 /*
-		
-		this.terrain = null;
-
-		this.camera = new camera.Camera();
 
 		this.levelNum = 0;
 		this.level = levels.getLevel(this.levelNum);
