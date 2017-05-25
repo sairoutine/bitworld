@@ -1,8 +1,13 @@
 'use strict';
 
+// utils
 Number.prototype.clamp = function(min, max) {
 	return (this < min ? min : (this > max ? max : this));
 };
+function centerXY(pos) {
+	return [pos[0]+0.5, pos[1]+0.5, pos[2]];
+}
+
 
 
 
@@ -16,6 +21,7 @@ var Camera = require('../camera');
 var Level = require('../level');
 var PointLight = require('../point_light');
 var Sprites = require('../sprites');
+var DungeonConvert = require('../dungeon_convert');
 
 var SceneLoading = function(core) {
 	base_scene.apply(this, arguments);
@@ -41,7 +47,7 @@ SceneLoading.prototype.init = function() {
 
 	// レベル
 	this.levelNum = 0; // 1~8
-	this.level = Level.getLevel(this.levelNum);
+	this.level = Level.getLevel(this.levelNum); // TODO: gotolevel 内でやっているので不要では
 
 	// ライト一覧
 	this.lights = [];
@@ -59,11 +65,24 @@ SceneLoading.prototype.init = function() {
 	this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,1]);
 
 	this.sprites.sprites[1].maxSpeed *= 0.8;
-/*
-		goToLevel(this.levelNum);
-*/
 
+	// 最初のステージへ
+	this.goToLevel(this.levelNum);
 };
+
+SceneLoading.prototype.goToLevel = function(l) {
+	this.level = Level.getLevel(l);
+	this.dungeonObj = new DungeonConvert(this.level);
+
+	// ゴールを照らすライト
+	this.lights[1] = new PointLight([1.0, 0.5, 0.0], centerXY(this.dungeonObj.upstairs), [0.2, 0.1, 0.05]);
+	this.terrain.generate(this.dungeonObj.cubes);
+
+	this.player.pos = centerXY(this.dungeonObj.upstairs);
+	this.sprites.sprites[1].pos = centerXY(this.dungeonObj.upstairs);
+	this.sprites.update();
+};
+
 
 
 SceneLoading.prototype.beforeDraw = function() {
@@ -95,21 +114,7 @@ SceneLoading.prototype.draw = function(){
 };
 
 /*
-		function goToLevel(l) {
-			this.level = levels.getLevel(l);
-			this.dungeonObj = new dungeon(this.level);
-			this.lights[1] = new light.PointLight([1.0, 0.5, 0.0], centerXY(this.dungeonObj.upstairs), [0.2, 0.1, 0.05]);
-			this.terrain.generate(this.dungeonObj.cubes);
 
-			player.pos = centerXY(this.dungeonObj.upstairs);
-			this.sprites.sprites[1].pos = centerXY(this.dungeonObj.upstairs);
-			this.sprites.update();
-		}
-
-
-		function centerXY(pos) {
-			return [pos[0]+0.5, pos[1]+0.5, pos[2]];
-		}
 
 		function renderWorld() {
 			gl.enable(gl.CULL_FACE);
@@ -188,9 +193,6 @@ SceneLoading.prototype.draw = function(){
 
 			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.sprites.indexObject);
 			gl.drawElements(gl.TRIANGLES, this.sprites.numVertices(), gl.UNSIGNED_SHORT, 0);
-		}
-
-		function display() {
 		}
 
 		function checkStairs() {
