@@ -2,9 +2,6 @@
 
 /*
  * TODO
- * core の new Game に option で webgl: true を渡せるようにする
- * →終わったら、画面最大化を実装
- * → createWebGL → core の機能に
  * createData →リファクタ
  * 各種オブジェクトのリファクタ
   camera.js
