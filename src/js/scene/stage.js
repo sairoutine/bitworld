@@ -62,12 +62,11 @@ SceneLoading.prototype.init = function() {
 
 	this.data = createData(this.gl);
 
-	var texture = {};
-	texture.land    = new TextureAtlas(this.gl, this.core.image_loader.getImage("ldfaithful"), 8);
-	texture.sprites = new TextureAtlas(this.gl, this.core.image_loader.getImage("oryx"), 8);
+	var land    = new TextureAtlas(this.gl, this.core.image_loader.getImage("ldfaithful"), 8);
+	var sprites = new TextureAtlas(this.gl, this.core.image_loader.getImage("oryx"), 8);
 
 	// 地形
-	this.terrain = new Terrain(this.gl, texture.land);
+	this.terrain = new Terrain(this.gl, land);
 	// カメラ
 	this.camera = new Camera();
 
@@ -81,7 +80,7 @@ SceneLoading.prototype.init = function() {
 	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
-	this.sprites = new Sprites(this.gl, texture.sprites);
+	this.sprites = new Sprites(this.gl, sprites);
 	this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
 
 	// プレイヤー
