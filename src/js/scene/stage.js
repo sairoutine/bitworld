@@ -5,10 +5,9 @@
  * core の new Game に option で webgl: true を渡せるようにする
  * →終わったら、画面最大化を実装
  * → createWebGL → core の機能に
- * clamp 関数を適切な場所に(util?)
- * →createData →リファクタ
+ * → clamp 関数を適切な場所に(util?)
  * init 内の texture って object 別にいらないよな
- * counter プロパティを frame_count プロパティに
+ * createData →リファクタ
  * 各種オブジェクトのリファクタ
   camera.js
   data.js
@@ -66,8 +65,6 @@ SceneLoading.prototype.init = function() {
 	var texture = {};
 	texture.land    = new TextureAtlas(this.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	texture.sprites = new TextureAtlas(this.gl, this.core.image_loader.getImage("oryx"), 8);
-
-	this.counter = 0; // TODO: frame_count に置き換える
 
 	// 地形
 	this.terrain = new Terrain(this.gl, texture.land);
@@ -186,7 +183,6 @@ SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 
 SceneLoading.prototype.renderSprites = function() {
 	this.gl.disable(this.gl.CULL_FACE);
-	this.counter++;
 
 	this.gl.useProgram(this.data.sprites.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
@@ -198,7 +194,7 @@ SceneLoading.prototype.renderSprites = function() {
 	this.gl.uniformMatrix4fv(this.data.sprites.u.VMatrix, false, this.data.world.m.vMatrix);
 	this.gl.uniformMatrix4fv(this.data.sprites.u.PMatrix, false, this.data.world.m.pMatrix);
 
-	this.gl.uniform1f(this.data.sprites.u.Counter, this.counter);
+	this.gl.uniform1f(this.data.sprites.u.Counter, this.frame_count);
 	this.gl.uniform3fv(this.data.sprites.u.AmbientColor, this.level.ambient);
 	this.gl.uniform3fv(this.data.sprites.u.CamPos, this.camera.pos);
 
