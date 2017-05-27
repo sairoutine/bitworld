@@ -53,15 +53,13 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
-	this.gl = createWebGLContext(this.core.canvas_dom);
+	this.data = createData(this.core.gl);
 
-	this.data = createData(this.gl);
-
-	var land    = new TextureAtlas(this.gl, this.core.image_loader.getImage("ldfaithful"), 8);
-	var sprites = new TextureAtlas(this.gl, this.core.image_loader.getImage("oryx"), 8);
+	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
+	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
 
 	// 地形
-	this.terrain = new Terrain(this.gl, land);
+	this.terrain = new Terrain(this.core.gl, land);
 	// カメラ
 	this.camera = new Camera();
 
@@ -75,7 +73,7 @@ SceneLoading.prototype.init = function() {
 	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
-	this.sprites = new Sprites(this.gl, sprites);
+	this.sprites = new Sprites(this.core.gl, sprites);
 	this.sprites.addSprite(Math.floor(Math.random()*256), [0,0,0]);
 
 	// プレイヤー
@@ -110,10 +108,10 @@ SceneLoading.prototype.beforeDraw = function() {
 
 };
 SceneLoading.prototype.draw = function(){
-	this.gl.clearColor.apply(this,this.data.background);
-	this.gl.clear(this.gl.COLOR_BUFFER_BIT|this.gl.DEPTH_BUFFER_BIT);
+	this.core.gl.clearColor.apply(this,this.data.background);
+	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT);
 
-	this.gl.viewport(0, 0, this.core.width, this.core.height);
+	this.core.gl.viewport(0, 0, this.core.width, this.core.height);
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
 
 	this.handleInputs();
@@ -132,16 +130,16 @@ SceneLoading.prototype.draw = function(){
 };
 
 SceneLoading.prototype.renderWorld = function(){
-	this.gl.enable(this.gl.CULL_FACE);
-	this.gl.cullFace(this.gl.BACK);
-	this.gl.useProgram(this.data.world.program);
+	this.core.gl.enable(this.core.gl.CULL_FACE);
+	this.core.gl.cullFace(this.core.gl.BACK);
+	this.core.gl.useProgram(this.data.world.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
-	this.gl.uniformMatrix4fv(this.data.world.u.MMatrix, false, this.data.world.m.mMatrix);
-	this.gl.uniformMatrix4fv(this.data.world.u.VMatrix, false, this.data.world.m.vMatrix);
-	this.gl.uniformMatrix4fv(this.data.world.u.PMatrix, false, this.data.world.m.pMatrix);
+	this.core.gl.uniformMatrix4fv(this.data.world.u.MMatrix, false, this.data.world.m.mMatrix);
+	this.core.gl.uniformMatrix4fv(this.data.world.u.VMatrix, false, this.data.world.m.vMatrix);
+	this.core.gl.uniformMatrix4fv(this.data.world.u.PMatrix, false, this.data.world.m.pMatrix);
 
-	this.gl.uniform3fv(this.data.world.u.AmbientColor, this.level.ambient);
+	this.core.gl.uniform3fv(this.data.world.u.AmbientColor, this.level.ambient);
 
 	this.updateLights(this.data.world);
 	// Bind buffers
@@ -149,48 +147,48 @@ SceneLoading.prototype.renderWorld = function(){
 	this.attribSetup(this.data.world.a.Texture, this.terrain.texCoordObject, 2);
 	this.attribSetup(this.data.world.a.Normal, this.terrain.normalObject, 3);
 
-	this.gl.activeTexture(this.gl.TEXTURE0);
-	this.gl.bindTexture(this.gl.TEXTURE_2D, this.terrain.textureAtlas.texture);
-	this.gl.uniform1i(this.data.world.u.Sampler, 0);
+	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
+	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.terrain.textureAtlas.texture);
+	this.core.gl.uniform1i(this.data.world.u.Sampler, 0);
 
-	this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.terrain.indexObject);
-	this.gl.drawElements(this.gl.TRIANGLES, this.terrain.numVertices(), this.gl.UNSIGNED_SHORT, 0);
+	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.terrain.indexObject);
+	this.core.gl.drawElements(this.core.gl.TRIANGLES, this.terrain.numVertices(), this.core.gl.UNSIGNED_SHORT, 0);
 };
 
 SceneLoading.prototype.updateLights = function(program){
 	for (var i=0; i<this.lights.length; i++) {
 		this.lights[i].update();
-		this.gl.uniform1f(program.u.Light[i].enabled, this.lights[i].enabled);
-		this.gl.uniform3fv(program.u.Light[i].attenuation, this.lights[i].attenuation);
-		this.gl.uniform3fv(program.u.Light[i].color, this.lights[i].color);
-		this.gl.uniform3fv(program.u.Light[i].position, this.lights[i].position);
+		this.core.gl.uniform1f(program.u.Light[i].enabled, this.lights[i].enabled);
+		this.core.gl.uniform3fv(program.u.Light[i].attenuation, this.lights[i].attenuation);
+		this.core.gl.uniform3fv(program.u.Light[i].color, this.lights[i].color);
+		this.core.gl.uniform3fv(program.u.Light[i].position, this.lights[i].position);
 	}
 };
 
 SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 	if (!type)
-		type = this.gl.FLOAT;
-	this.gl.enableVertexAttribArray(attrib);
-	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, object);
-	this.gl.vertexAttribPointer(attrib, size, type, false, 0, 0);
+		type = this.core.gl.FLOAT;
+	this.core.gl.enableVertexAttribArray(attrib);
+	this.core.gl.bindBuffer(this.core.gl.ARRAY_BUFFER, object);
+	this.core.gl.vertexAttribPointer(attrib, size, type, false, 0, 0);
 };
 
 SceneLoading.prototype.renderSprites = function() {
-	this.gl.disable(this.gl.CULL_FACE);
+	this.core.gl.disable(this.core.gl.CULL_FACE);
 
-	this.gl.useProgram(this.data.sprites.program);
+	this.core.gl.useProgram(this.data.sprites.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
 	this.sprites.sprites[0].theta = this.camera.theta[2];
 	this.sprites.update();
 
-	this.gl.uniformMatrix4fv(this.data.sprites.u.MMatrix, false, this.data.world.m.mMatrix);
-	this.gl.uniformMatrix4fv(this.data.sprites.u.VMatrix, false, this.data.world.m.vMatrix);
-	this.gl.uniformMatrix4fv(this.data.sprites.u.PMatrix, false, this.data.world.m.pMatrix);
+	this.core.gl.uniformMatrix4fv(this.data.sprites.u.MMatrix, false, this.data.world.m.mMatrix);
+	this.core.gl.uniformMatrix4fv(this.data.sprites.u.VMatrix, false, this.data.world.m.vMatrix);
+	this.core.gl.uniformMatrix4fv(this.data.sprites.u.PMatrix, false, this.data.world.m.pMatrix);
 
-	this.gl.uniform1f(this.data.sprites.u.Counter, this.frame_count);
-	this.gl.uniform3fv(this.data.sprites.u.AmbientColor, this.level.ambient);
-	this.gl.uniform3fv(this.data.sprites.u.CamPos, this.camera.pos);
+	this.core.gl.uniform1f(this.data.sprites.u.Counter, this.frame_count);
+	this.core.gl.uniform3fv(this.data.sprites.u.AmbientColor, this.level.ambient);
+	this.core.gl.uniform3fv(this.data.sprites.u.CamPos, this.camera.pos);
 
 	this.updateLights(this.data.sprites);
 
@@ -201,12 +199,12 @@ SceneLoading.prototype.renderSprites = function() {
 	this.attribSetup(this.data.sprites.a.Moving, this.sprites.movingObject, 1);
 	this.attribSetup(this.data.sprites.a.Flipped, this.sprites.flippedObject, 1);
 
-	this.gl.activeTexture(this.gl.TEXTURE0);
-	this.gl.bindTexture(this.gl.TEXTURE_2D, this.sprites.textureAtlas.texture);
-	this.gl.uniform1i(this.data.sprites.u.Sampler, 0);
+	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
+	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.sprites.textureAtlas.texture);
+	this.core.gl.uniform1i(this.data.sprites.u.Sampler, 0);
 
-	this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.sprites.indexObject);
-	this.gl.drawElements(this.gl.TRIANGLES, this.sprites.numVertices(), this.gl.UNSIGNED_SHORT, 0);
+	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.sprites.indexObject);
+	this.core.gl.drawElements(this.core.gl.TRIANGLES, this.sprites.numVertices(), this.core.gl.UNSIGNED_SHORT, 0);
 };
 
 SceneLoading.prototype.checkStairs = function() {
