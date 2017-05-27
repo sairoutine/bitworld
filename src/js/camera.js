@@ -1,5 +1,6 @@
 'use strict';
 var glmatrix = require("gl-matrix");
+var Util = require('./hakurei').util;
 
 var Camera = function() {
 	this.matrix = glmatrix.mat4.create();
@@ -37,22 +38,22 @@ Camera.prototype.changeAngle = function(dTheta) {
 	this.theta[0] -= dTheta[0];
 	this.theta[1] -= dTheta[1];
 	this.theta[2] -= dTheta[2];
-	this.theta[0] = this.theta[0].clamp(this.thetaLimits[0],this.thetaLimits[1]);
+	this.theta[0] = Util.clamp(this.theta[0], this.thetaLimits[0],this.thetaLimits[1]);
 };
 
 Camera.prototype.setAngle = function(theta) {
 	this.theta = theta;
-	this.theta[0] = this.theta[0].clamp(this.thetaLimits[0],this.thetaLimits[1]);
+	this.theta[0] = Util.clamp(this.theta[0], this.thetaLimits[0],this.thetaLimits[1]);
 };
 
 Camera.prototype.changeDistance = function(amount) {
 	this.desiredDistance += amount;
-	this.desiredDistance = this.desiredDistance.clamp(this.distanceLimits[0],this.distanceLimits[1]);
+	this.desiredDistance = Util.clamp(this.desiredDistance, this.distanceLimits[0],this.distanceLimits[1]);
 };
 
 Camera.prototype.setDistance = function(dist) {
 	this.desiredDistance = dist;
-	this.desiredDistance = this.desiredDistance.clamp(this.distanceLimits[0],this.distanceLimits[1]);
+	this.desiredDistance = Util.clamp(this.desiredDistance, this.distanceLimits[0],this.distanceLimits[1]);
 };
 
 Camera.prototype.sphericalToCartesian = function(origin,r,angles) {

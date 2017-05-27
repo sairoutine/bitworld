@@ -5,8 +5,6 @@
  * core の new Game に option で webgl: true を渡せるようにする
  * →終わったら、画面最大化を実装
  * → createWebGL → core の機能に
- * → clamp 関数を適切な場所に(util?)
- * init 内の texture って object 別にいらないよな
  * createData →リファクタ
  * 各種オブジェクトのリファクタ
   camera.js
@@ -21,12 +19,10 @@
   sprites.js
   terrain.js
   texture.js
+  scene/stage.js
  */
 
 // utils
-Number.prototype.clamp = function(min, max) {
-	return (this < min ? min : (this > max ? max : this));
-};
 function centerXY(pos) {
 	return [pos[0]+0.5, pos[1]+0.5, pos[2]];
 }
