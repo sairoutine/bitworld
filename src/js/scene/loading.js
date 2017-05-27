@@ -44,6 +44,8 @@ SceneLoading.prototype.draw = function(){
 	base_scene.prototype.draw.apply(this, arguments);
 	var ctx = this.core.ctx;
 
+	if(!ctx) return; // 2D context has been depricated in this game
+
 	// 背景
 	ctx.save();
 	ctx.fillStyle = 'white';
