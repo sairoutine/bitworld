@@ -2,7 +2,6 @@
 var core = require('./hakurei').core;
 var util = require('./hakurei').util;
 var CONSTANT = require('./constant');
-var createWebGL = require('./gl'); //WebGL
 
 var SceneLoading = require('./scene/loading');
 var SceneStage = require('./scene/stage');

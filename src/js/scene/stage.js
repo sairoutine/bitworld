@@ -31,7 +31,6 @@ var base_scene = require('../hakurei').scene.base;
 var CONSTANT = require('../hakurei').constant;
 var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
-var createWebGLContext = require('../gl');
 var TextureAtlas = require('../texture');
 var Terrain = require('../terrain');
 var Camera = require('../camera');
