@@ -53,8 +53,7 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
-	this.canvas = document.getElementById('subCanvas');
-	this.gl = createWebGLContext(this.canvas);
+	this.gl = createWebGLContext(this.core.canvas_dom);
 
 	this.data = createData(this.gl);
 
@@ -114,8 +113,8 @@ SceneLoading.prototype.draw = function(){
 	this.gl.clearColor.apply(this,this.data.background);
 	this.gl.clear(this.gl.COLOR_BUFFER_BIT|this.gl.DEPTH_BUFFER_BIT);
 
-	this.gl.viewport(0, 0, this.canvas.width, this.canvas.height);
-	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.canvas.width/this.canvas.height, 0.1, 100.0);
+	this.gl.viewport(0, 0, this.core.width, this.core.height);
+	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
 
 	this.handleInputs();
 	//handleInputs();
