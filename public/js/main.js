@@ -6901,6 +6901,1149 @@ process.chdir = function (dir) {
 process.umask = function() { return 0; };
 
 },{}],14:[function(require,module,exports){
+'use strict';
+
+var AssetsConfig = {};
+AssetsConfig.images = {
+	jolicraft:  "./image/jolicraft.png",
+	ldfaithful: "./image/ldfaithful.png",
+	oryx:       "./image/oryx.png",
+};
+
+AssetsConfig.sounds = {
+};
+
+AssetsConfig.bgms = {
+};
+
+
+module.exports = AssetsConfig;
+
+},{}],15:[function(require,module,exports){
+'use strict';
+var glmatrix = require("gl-matrix");
+var Util = require('./hakurei').util;
+
+var Camera = function() {
+	this.matrix = glmatrix.mat4.create();
+	glmatrix.mat4.identity(this.matrix);
+
+	this.theta = [1.7*Math.PI, 0.0, 0.5*Math.PI]; // Rotation about X and Z axes
+	this.center = [0, 0, 0];
+	this.up = [0, 0, 1];
+	this.pos = [0, 0, 0];
+
+	this.thetaLimits = [1.5*Math.PI, 1.8*Math.PI];
+	this.distanceLimits = [2.0, 15.0];
+	this.zoomWeight = 0.1;
+
+	this.currentDistance = (this.distanceLimits[0]+this.distanceLimits[1])/2;
+	this.desiredDistance = this.currentDistance;
+
+	this.updateMatrix();
+};
+/** If there is an object between the camera and the center, move
+	the camera in front of the blocking object */
+Camera.prototype.checkCollision = function(env) {
+	return false;
+};
+
+Camera.prototype.moveCenter = function(pos, offset) {
+	this.center = pos.slice(0);
+	if (offset) {
+		for (var i=0; i<3; i++)
+			this.center[i] += offset[i];
+	}
+};
+
+Camera.prototype.changeAngle = function(dTheta) {
+	this.theta[0] -= dTheta[0];
+	this.theta[1] -= dTheta[1];
+	this.theta[2] -= dTheta[2];
+	this.theta[0] = Util.clamp(this.theta[0], this.thetaLimits[0],this.thetaLimits[1]);
+};
+
+Camera.prototype.setAngle = function(theta) {
+	this.theta = theta;
+	this.theta[0] = Util.clamp(this.theta[0], this.thetaLimits[0],this.thetaLimits[1]);
+};
+
+Camera.prototype.changeDistance = function(amount) {
+	this.desiredDistance += amount;
+	this.desiredDistance = Util.clamp(this.desiredDistance, this.distanceLimits[0],this.distanceLimits[1]);
+};
+
+Camera.prototype.setDistance = function(dist) {
+	this.desiredDistance = dist;
+	this.desiredDistance = Util.clamp(this.desiredDistance, this.distanceLimits[0],this.distanceLimits[1]);
+};
+
+Camera.prototype.sphericalToCartesian = function(origin,r,angles) {
+	return [ 
+		origin[0] + r * Math.sin(angles[0]) * Math.cos(angles[2]),
+		origin[1] + r * Math.sin(angles[0]) * Math.sin(angles[2]),
+		origin[2] + r * Math.cos(angles[0])
+	];
+};
+
+Camera.prototype.updateMatrix = function(env) {
+	for (var i=0; i<3; i++) {
+		if (this.theta[i] < 0)
+			this.theta[i] += 2*Math.PI;
+		else if (this.theta[i] > 2*Math.PI)
+			this.theta[i] -= 2*Math.PI;
+	}
+	if (env) {
+		this.currentDistance *= 1-this.zoomWeight; 
+		this.currentDistance += this.zoomWeight*this.desiredDistance;
+	}
+
+	this.pos = this.sphericalToCartesian(this.center, this.currentDistance, this.theta);
+	glmatrix.mat4.lookAt(this.matrix, this.pos, this.center, this.up);
+};
+
+module.exports = Camera;
+
+},{"./hakurei":22,"gl-matrix":2}],16:[function(require,module,exports){
+'use strict';
+var DEBUG = require("./debug_constant");
+
+var CONSTANT = {
+	DEBUG: {},
+};
+
+if (DEBUG.ON) {
+	CONSTANT.DEBUG = DEBUG;
+}
+module.exports = CONSTANT;
+
+},{"./debug_constant":18}],17:[function(require,module,exports){
+'use strict';
+var programs = require("./programs");
+var PointLight = require("./point_light");
+var CreateData = function(gl){
+		var data = programs(gl);
+
+		// Uniform array of PointLight structs in GLSL
+		setLightUniforms(gl, data.world);
+		setLightUniforms(gl, data.sprites);
+
+		//data.background = [0.5, 0.5, 0.5, 1.0];
+		data.background = [0, 0, 0, 1];
+		data.rotateSpeed = 0.01;
+		data.zoomFactor = 0.01;
+
+		gl.enable(gl.DEPTH_TEST);
+
+		gl.useProgram(data.world.program);
+		return data;
+};
+function setLightUniforms(gl, prog) {
+	// Uniform array of PointLight structs in GLSL
+	prog.u.Light = [];
+	for (var i=0; i<4; i++) {
+		var l = prog.u.Light;
+		l[i] = {};
+		for (var key in new PointLight()) {
+			l[i][key] = gl.getUniformLocation(prog.program, "uLight["+i+"]."+key);
+		}
+	}
+}
+module.exports = CreateData;
+
+},{"./point_light":40,"./programs":41}],18:[function(require,module,exports){
+'use strict';
+var DEBUG = {
+	ON: true,
+	SOUND_OFF: true,
+	START_STAGE_NO: 1,
+};
+
+module.exports = DEBUG;
+
+},{}],19:[function(require,module,exports){
+'use strict';
+var randInt = function(min,max) {
+	if (max == null) {
+		max = min;
+		min = 0;
+	}
+	return Math.floor(Math.random()*(max-min))+min;
+};
+
+var Room = (function() {
+	var Room = function(id,minSize,maxSize,topLeft) {
+		this.id = id;
+		this.connected = false;
+		this.unconnectedNeighbors = [];
+		this.connectedTo = [];
+		var size = [
+			randInt(minSize[0],maxSize[0]),
+			randInt(minSize[1],maxSize[1])
+		];
+		var positionMax = [
+			maxSize[0] - size[0],
+			maxSize[1] - size[1]
+		];
+		var position = [
+			topLeft[0] + randInt(positionMax[0]) + 1,
+			topLeft[1] + randInt(positionMax[1]) + 1
+		];
+		this.rect = [position[0],position[1],size[0],size[1]];
+	};
+	Room.prototype.removeFromUnconnected = function(roomId) {
+		for (var i=0; i<this.unconnectedNeighbors.length; i++) {
+			if (this.unconnectedNeighbors[i].id == roomId) {
+				this.unconnectedNeighbors.splice(i,1);
+				return;
+			}
+		}
+	};
+	Room.prototype.connectTo = function(roomIndex) {
+		var newlyConnected = this.unconnectedNeighbors[roomIndex];
+		this.connectedTo.push(newlyConnected);
+		this.unconnectedNeighbors.splice(roomIndex,1);
+		//newlyConnected.connectedTo.push(this);
+		newlyConnected.removeFromUnconnected(this.id);
+		this.connected = true;
+		newlyConnected.connected = true;
+
+		return newlyConnected;
+	};
+	Room.prototype.connectRandom = function() {
+		if (this.unconnectedNeighbors.length == 0)
+			return false;
+		var roomIndex = randInt(this.unconnectedNeighbors.length);
+		return this.connectTo(roomIndex);
+	};
+	Room.prototype.connectToConnected = function() {
+		var candidates = [];
+		for (var i=0; i<this.unconnectedNeighbors.length; i++)
+			candidates.push(i);
+		while (candidates.length > 0) {
+			var index = randInt(candidates.length);
+			if (this.unconnectedNeighbors[candidates[index]].connected) 
+				return this.connectTo(candidates[index]);
+			else
+				candidates.splice(index,1);
+		}
+		return false;
+	};
+	return Room;
+})();
+
+var Dungeon = function(tileDim, roomDim, roomMinSize) {
+	this.tileDim = tileDim;
+	this.roomDim = roomDim;
+	this.numRooms = roomDim[0]*roomDim[1];
+	this.roomGrid = [
+		Math.floor(tileDim[0]/roomDim[0]),
+		Math.floor(tileDim[1]/roomDim[1])
+	];
+	this.rooms = [];
+	this.firstRoom = 0;
+	this.lastRoom = 0;
+
+	this.tileVals = {
+		wall:  "#",
+		floor: " ",
+		empty: ".",
+		up:    "u",
+		down:  "d",
+	}
+	
+	var tiles = [];
+	for (var i=0; i<tileDim[0]; i++) {
+		tiles[i] = [];
+		for (var j=0; j<tileDim[1]; j++)
+			tiles[i][j] = this.tileVals.wall;
+	}
+	this.tiles = tiles;
+	
+	var roomMaxSize = [
+		tileDim[0]/roomDim[0]-2,
+		tileDim[1]/roomDim[1]-2
+	];
+	if (!roomMinSize)
+		roomMinSize = [2,2];
+	var rooms = [];
+	for (var i=0; i<roomDim[0]; i++) {
+		rooms[i] = [];
+		for (var j=0; j<roomDim[1]; j++)
+			rooms[i][j] = new Room(
+				i*roomDim[0]+j,
+				roomMinSize,
+				roomMaxSize, 
+				[this.roomGrid[0]*i, this.roomGrid[1]*j]
+			);
+	}
+	for (var i=0; i<roomDim[0]; i++) {
+		for (var j=0; j<roomDim[1]; j++) {
+			if (i>0)
+				rooms[i][j].unconnectedNeighbors.push(rooms[i-1][j]);
+			if (i<roomDim[0]-1)
+				rooms[i][j].unconnectedNeighbors.push(rooms[i+1][j]);
+			if (j>0)
+				rooms[i][j].unconnectedNeighbors.push(rooms[i][j-1]);
+			if (j<roomDim[1]-1)
+				rooms[i][j].unconnectedNeighbors.push(rooms[i][j+1]);
+		}
+	}
+	this.rooms = rooms;
+	
+
+	this.getRoomFromCoords = function(x,y) {
+		return this.rooms[x*this.rooms.length][y];
+	};
+
+	this.getRoomFromId = function(id) {
+		return this.rooms[Math.floor(id/this.roomDim[0])][id%this.roomDim[1]];
+	};
+	
+	this.generate = function() {
+		var unconnected = [];
+		for (var i=0; i<this.numRooms; i++)
+			unconnected[i] = i;
+
+		// See http://kuoi.com/~kamikaze/GameDesign/art07_rogue_dungeon.php
+		var roomId = randInt(this.numRooms);
+		var current = this.getRoomFromId(roomId);
+		var firstRoom = roomId;
+		while (current && current.unconnectedNeighbors.length > 0) {
+			roomId = current.id;
+			var roomIndex = unconnected.indexOf(roomId);
+			if (roomIndex >= 0)
+				unconnected.splice(roomIndex,1);
+			current = current.connectRandom();
+		}
+		while (unconnected.length > 0) {
+			var roomNum = randInt(unconnected.length);
+			current = this.getRoomFromId(unconnected[roomNum]);
+			if (current.connectToConnected()) 
+				unconnected.splice(roomNum,1);
+		}
+		var lastRoom = current.id;
+
+		// Draw and connect rooms
+		for (var i=0; i<this.numRooms; i++) {
+			var room = this.getRoomFromId(i);
+			this.fillRoom(room);
+			for (var j=0; j<room.connectedTo.length; j++) {
+				this.connectRooms(room,room.connectedTo[j]);
+			}
+		}
+
+		// Place up stairs
+		var room = this.getRoomFromId(firstRoom);
+		this.upStairsPos = [
+			room.rect[0] + randInt(room.rect[2]),
+			room.rect[1] + randInt(room.rect[3]),
+		];
+		this.plot(this.upStairsPos[0],this.upStairsPos[1],this.tileVals.up);
+		room = this.getRoomFromId(lastRoom);
+		this.downStairsPos = [
+			room.rect[0] + randInt(room.rect[2]),
+			room.rect[1] + randInt(room.rect[3]),
+		];
+		this.plot(this.downStairsPos[0],this.downStairsPos[1],this.tileVals.down);
+		this.cleanUpWalls();
+	};
+
+	this.plot = function(x,y,val) {
+		if (!val)
+			val = this.tileVals.floor;
+		this.tiles[Math.floor(x)][Math.floor(y)] = val;
+	};
+
+	this.fillRoom = function(room) {
+		for (var i=room.rect[0]; i<room.rect[0]+room.rect[2]; i++)
+			for (var j=room.rect[1]; j<room.rect[1]+room.rect[3]; j++)
+				this.plot(i,j);
+	};
+
+	// Bresenham's line algorithm
+	// Thanks to: http://stackoverflow.com/a/4672319/1887090
+	this.fillHallway = function(x0,y0,x1,y1) {
+		var dx = Math.abs(x1-x0);
+		var dy = Math.abs(y1-y0);
+		var sx = (x0 < x1) ? 1 : -1;
+		var sy = (y0 < y1) ? 1 : -1;
+		var err = dx-dy;
+
+		for(;;) {
+			this.plot(x0,y0);
+			this.plot(x0-1,y0);
+			this.plot(x0+1,y0);
+			this.plot(x0,y0-1);
+			this.plot(x0,y0+1);
+
+			if (x0==x1 && y0==y1) 
+				break;
+
+			var e2 = 2*err;
+			if (e2 >-dy) { 
+				err -= dy; 
+				x0 += sx; 
+			}
+			if (e2 < dx) { 
+				err += dx; 
+				y0 += sy; 
+			}
+		}
+	}
+
+	this.connectRooms = function(room1,room2) {
+		this.fillHallway(
+			Math.floor(room1.rect[0] + room1.rect[2]/2),
+			Math.floor(room1.rect[1] + room1.rect[3]/2),
+			Math.floor(room2.rect[0] + room2.rect[2]/2),
+			Math.floor(room2.rect[1] + room2.rect[3]/2)
+		);
+	};
+
+	this.cleanUpWalls = function() {
+		for (var i=0; i<this.tileDim[0]; i++) {
+			for (var j=0; j<this.tileDim[1]; j++) {
+				if (this.tiles[i][j] != this.tileVals.wall)
+					continue;
+
+				if (i>0 && this.isWalkable(i-1,j)
+					|| i<this.tileDim[0]-1 && this.isWalkable(i+1,j)
+					|| j>0 && this.isWalkable(i,j-1)
+					|| j<this.tileDim[1]-1 && this.isWalkable(i,j+1)
+				)
+					continue;
+				this.tiles[i][j] = this.tileVals.empty;
+			}
+		}
+	}
+
+	this.isWalkable = function(x,y) {
+		return this.tiles[x][y] != this.tileVals.wall && this.tiles[x][y] != this.tileVals.empty;
+	}
+
+	this.printDungeon = function() {
+		var str = "";
+		for (var i=0; i<this.tileDim[0]; i++) {
+			str += "\n";
+			for (var j=0; j<this.tileDim[1]; j++)
+				str += this.tiles[i][j];
+		}
+		console.log(str);
+	}
+	this.generate();
+};
+
+module.exports = Dungeon;
+
+},{}],20:[function(require,module,exports){
+'use strict';
+var Dungeon = require("./dungeon");
+
+var DungeonConvert = function(level) {
+	var cubes = [];
+	var upstairs = [0,0,0];
+	var downstairs = [0,0,0];
+	var tileDim = level.tileDim;
+	var roomDim = level.roomDim;
+	var roomMinSize = level.roomMinSize;
+	var d = new Dungeon(tileDim,roomDim,roomMinSize);
+
+	for (var z=0; z<2; z++) {
+		cubes[z] = [];
+		for (var y=0; y<d.tileDim[1]; y++) {
+			cubes[z][y] = [];
+			for (var x=0; x<d.tileDim[0]; x++) {
+				switch(d.tiles[x][y]) {
+				case d.tileVals.empty:
+					cubes[z][y][x] = 0; break;
+				case d.tileVals.wall:
+					cubes[z][y][x] = getWall(z); break;
+				case d.tileVals.floor:
+					cubes[z][y][x] = getFloor(z); break;
+				case d.tileVals.up:
+					cubes[z][y][x] = getUp(z); 
+					upstairs = [x,y,1.2];
+					break;
+				case d.tileVals.down:
+					cubes[z][y][x] = getDown(z); 
+					downstairs = [x,y,1.2];
+					break;
+				}
+			}
+		}
+	}
+	return {
+		cubes: cubes,
+		upstairs: upstairs,
+		downstairs: downstairs
+	};
+
+	function randFromArray(arr) {
+		return arr[Math.floor(Math.random()*arr.length)];
+	}
+
+	function getWall(z) {
+		if (z == 0)
+			return 0;
+		return randFromArray(level.wallTiles);
+	}
+	function getFloor(z) {
+		if (z > 0)
+			return 0;
+		return randFromArray(level.floorTiles);
+	}
+	function getUp(z) {
+		if (z > 0)
+			return 0;
+		return 212;
+	}
+	function getDown(z) {
+		if (z > 0)
+			return 0;
+		return 211;
+	}
+};
+module.exports = DungeonConvert;
+
+},{"./dungeon":19}],21:[function(require,module,exports){
+'use strict';
+var core = require('./hakurei').core;
+var util = require('./hakurei').util;
+var CONSTANT = require('./constant');
+
+var SceneLoading = require('./scene/loading');
+var SceneStage = require('./scene/stage');
+
+var Game = function(canvas) {
+	core.apply(this, arguments);
+};
+util.inherit(Game, core);
+
+Game.prototype.init = function () {
+	core.prototype.init.apply(this, arguments);
+
+	this.addScene("loading", new SceneLoading(this));
+	this.addScene("stage", new SceneStage(this));
+
+	this.changeScene("loading");
+};
+Game.prototype.playSound = function () {
+	if (CONSTANT.DEBUG.SOUND_OFF) return;
+	return this.audio_loader.playSound.apply(this.audio_loader, arguments);
+};
+Game.prototype.playBGM = function () {
+	if (CONSTANT.DEBUG.SOUND_OFF) return;
+	return this.audio_loader.playBGM.apply(this.audio_loader, arguments);
+};
+Game.prototype.stopBGM = function () {
+	if (CONSTANT.DEBUG.SOUND_OFF) return;
+	return this.audio_loader.stopBGM.apply(this.audio_loader, arguments);
+};
+
+module.exports = Game;
+
+},{"./constant":16,"./hakurei":22,"./scene/loading":42,"./scene/stage":43}],22:[function(require,module,exports){
+'use strict';
+
+module.exports = require("./hakureijs/index");
+
+},{"./hakureijs/index":28}],23:[function(require,module,exports){
+'use strict';
+
+var AudioLoader = function() {
+	this.sounds = {};
+	this.bgms = {};
+
+	this.loading_audio_num = 0;
+	this.loaded_audio_num = 0;
+
+	this.id = 0;
+
+	// flag which determine what sound.
+	this.soundflag = 0x00;
+
+	this.audio_context = new window.AudioContext();
+
+	// for legacy browser
+	this.audio_context.createGain = this.audio_context.createGain || this.audio_context.createGainNode;
+	// playing AudioBufferSourceNode instance
+	this.audio_source = null;
+
+
+};
+AudioLoader.prototype.init = function() {
+	// TODO: cancel already loading bgms and sounds
+
+	this.sounds = {};
+	this.bgms = {};
+
+	this.loading_audio_num = 0;
+	this.loaded_audio_num = 0;
+
+	this.id = 0;
+
+	this.soundflag = 0x00;
+};
+
+AudioLoader.prototype.loadSound = function(name, path, volume) {
+	var self = this;
+	self.loading_audio_num++;
+
+	if(!volume) volume = 1.0;
+
+
+	// it's done to load sound
+	var onload_function = function() {
+		self.loaded_audio_num++;
+	};
+
+	var audio = new Audio(path);
+	audio.volume = volume;
+	audio.addEventListener('canplay', onload_function);
+	audio.load();
+	self.sounds[name] = {
+		id: 1 << self.id++,
+		audio: audio,
+	};
+};
+
+AudioLoader.prototype.loadBGM = function(name, path, volume, loopStart, loopEnd) {
+	var self = this;
+	self.loading_audio_num++;
+
+	// it's done to load audio
+	var successCallback = function(audioBuffer) {
+		self.loaded_audio_num++;
+		self.bgms[name] = {
+			audio:     audioBuffer,
+			volume:    volume,
+			loopStart: loopStart,
+			loopEnd:   loopEnd,
+		};
+	};
+
+	var errorCallback = function(error) {
+		if (error instanceof Error) {
+			throw new Error(error.message);
+		} else {
+			throw error;
+		}
+	};
+
+	var xhr = new XMLHttpRequest();
+	xhr.onload = function() {
+		if(xhr.status !== 200) {
+			return;
+		}
+
+		var arrayBuffer = xhr.response;
+
+		// decode
+		self.audio_context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
+	};
+
+	xhr.open('GET', path, true);
+	xhr.responseType = 'arraybuffer';
+	xhr.send(null);
+};
+
+AudioLoader.prototype.isAllLoaded = function() {
+	return this.loaded_audio_num > 0 && this.loaded_audio_num === this.loading_audio_num;
+};
+
+AudioLoader.prototype.playSound = function(name) {
+	this.soundflag |= this.sounds[name].id;
+};
+
+AudioLoader.prototype.executePlaySound = function() {
+
+	for(var name in this.sounds) {
+		if(this.soundflag & this.sounds[name].id) {
+			// play
+			this.sounds[name].audio.pause();
+			this.sounds[name].audio.currentTime = 0;
+			this.sounds[name].audio.play();
+
+			// delete flag
+			this.soundflag &= ~this.sounds[name].id;
+
+		}
+	}
+};
+AudioLoader.prototype.playBGM = function(name) {
+	var self = this;
+
+	// stop playing bgm
+	self.stopBGM();
+
+	self.audio_source = self._createSourceNode(name);
+	self.audio_source.start(0);
+};
+AudioLoader.prototype.stopBGM = function() {
+	var self = this;
+	if(self.isPlayingBGM()) {
+		self.audio_source.stop(0);
+		self.audio_source = null;
+	}
+};
+AudioLoader.prototype.isPlayingBGM = function() {
+	return this.audio_source ? true : false;
+};
+
+// create AudioBufferSourceNode instance
+AudioLoader.prototype._createSourceNode = function(name) {
+	var self = this;
+	var data = self.bgms[name];
+
+	var source = self.audio_context.createBufferSource();
+	source.buffer = data.audio;
+
+	if(data.loopStart || data.loopEnd) { source.loop = true; }
+	if(data.loopStart) { source.loopStart = data.loopStart; }
+	if(data.loopEnd)   { source.loopEnd = data.loopEnd; }
+
+	var audio_gain = this.audio_context.createGain();
+	audio_gain.gain.value = data.volume || 1.0;
+
+	source.connect(audio_gain);
+
+	audio_gain.connect(self.audio_context.destination);
+	source.start = source.start || source.noteOn;
+	source.stop  = source.stop  || source.noteOff;
+
+	return source;
+};
+
+AudioLoader.prototype.progress = function() {
+	return this.loaded_audio_num / this.loading_audio_num;
+};
+
+
+module.exports = AudioLoader;
+
+},{}],24:[function(require,module,exports){
+'use strict';
+
+var FontLoader = function() {
+	this.is_done = false;
+};
+FontLoader.prototype.init = function() {
+	this.is_done = false;
+};
+FontLoader.prototype.isAllLoaded = function() {
+	return this.is_done;
+};
+
+FontLoader.prototype.notifyLoadingDone = function() {
+	this.is_done = true;
+};
+
+FontLoader.prototype.progress = function() {
+	return this.is_done ? 1 : 0;
+};
+
+
+
+
+module.exports = FontLoader;
+
+},{}],25:[function(require,module,exports){
+'use strict';
+
+var ImageLoader = function() {
+	this.images = {};
+
+	this.loading_image_num = 0;
+	this.loaded_image_num = 0;
+};
+ImageLoader.prototype.init = function() {
+	// cancel already loading images
+	for(var name in this.images){
+		this.images[name].src = "";
+	}
+
+	this.images = {};
+
+	this.loading_image_num = 0;
+	this.loaded_image_num = 0;
+};
+
+ImageLoader.prototype.loadImage = function(name, path) {
+	var self = this;
+
+	self.loading_image_num++;
+
+	// it's done to load image
+	var onload_function = function() {
+		self.loaded_image_num++;
+	};
+
+	var image = new Image();
+	image.src = path;
+	image.onload = onload_function;
+	this.images[name] = image;
+};
+
+ImageLoader.prototype.isAllLoaded = function() {
+	return this.loaded_image_num > 0 && this.loaded_image_num === this.loading_image_num;
+};
+
+ImageLoader.prototype.getImage = function(name) {
+	return this.images[name];
+};
+
+ImageLoader.prototype.progress = function() {
+	return this.loaded_image_num / this.loading_image_num;
+};
+
+
+
+
+module.exports = ImageLoader;
+
+},{}],26:[function(require,module,exports){
+'use strict';
+
+var Constant = {
+	BUTTON_LEFT:  0x01,
+	BUTTON_UP:    0x02,
+	BUTTON_RIGHT: 0x04,
+	BUTTON_DOWN:  0x08,
+	BUTTON_Z:     0x10,
+	BUTTON_X:     0x20,
+	BUTTON_SHIFT: 0x40,
+	BUTTON_SPACE: 0x80,
+};
+
+module.exports = Constant;
+
+},{}],27:[function(require,module,exports){
+'use strict';
+var WebGLDebugUtils = require("webgl-debug");
+var CONSTANT = require("./constant");
+var ImageLoader = require("./asset_loader/image");
+var AudioLoader = require("./asset_loader/audio");
+var FontLoader = require("./asset_loader/font");
+
+var Core = function(canvas, options) {
+	if(!options) {
+		options = {};
+	}
+
+	this.canvas_dom = canvas;
+	this.ctx = null; // 2D context
+	this.gl  = null; // 3D context
+
+	if(options.webgl) {
+		this.gl = this.createWebGLContext(this.canvas_dom);
+	}
+	else {
+		this.ctx = this.canvas_dom.getContext('2d');
+	}
+
+	this.width = Number(canvas.getAttribute('width'));
+	this.height = Number(canvas.getAttribute('height'));
+
+	this.current_scene = null;
+	this._reserved_next_scene = null; // next scene which changes next frame run
+	this.scenes = {};
+
+	this.frame_count = 0;
+
+	this.request_id = null;
+
+	this.current_keyflag = 0x0;
+	this.before_keyflag = 0x0;
+
+	this.is_connect_gamepad = false;
+
+	this.image_loader = new ImageLoader();
+	this.audio_loader = new AudioLoader();
+	this.font_loader = new FontLoader();
+};
+Core.prototype.init = function () {
+	this.current_scene = null;
+	this._reserved_next_scene = null; // next scene which changes next frame run
+
+	this.frame_count = 0;
+
+	this.request_id = null;
+
+	this.current_keyflag = 0x0;
+	this.before_keyflag = 0x0;
+
+	this.image_loader.init();
+};
+Core.prototype.enableGamePad = function () {
+	this.is_connect_gamepad = true;
+};
+
+Core.prototype.isRunning = function () {
+	return this.request_id ? true : false;
+};
+Core.prototype.startRun = function () {
+	if(this.isRunning()) return;
+
+	this.run();
+};
+Core.prototype.run = function(){
+	// get gamepad input
+	this.handleGamePad();
+
+	// go to next scene if next scene is set
+	this.changeNextSceneIfReserved();
+
+	// play sound which already set to play
+	this.audio_loader.executePlaySound();
+
+	var current_scene = this.currentScene();
+	if(current_scene) {
+		current_scene.beforeDraw();
+
+		// clear already rendered canvas
+		this.clearCanvas();
+
+		current_scene.draw();
+		current_scene.afterDraw();
+	}
+
+	/*
+
+	if(Config.DEBUG) {
+		this._renderFPS();
+	}
+
+	// play sound effects
+	this.runPlaySound();
+	*/
+
+	// save key current pressed keys
+	this.before_keyflag = this.current_keyflag;
+
+	this.frame_count++;
+
+	// tick
+	this.request_id = requestAnimationFrame(this.run.bind(this));
+};
+Core.prototype.currentScene = function() {
+	if(this.current_scene === null) {
+		return;
+	}
+
+	return this.scenes[this.current_scene];
+};
+
+Core.prototype.addScene = function(name, scene) {
+	this.scenes[name] = scene;
+};
+Core.prototype.changeScene = function() {
+	var args = Array.prototype.slice.call(arguments); // to convert array object
+	this._reserved_next_scene = args;
+};
+Core.prototype.changeNextSceneIfReserved = function() {
+	if(this._reserved_next_scene) {
+		this.current_scene = this._reserved_next_scene.shift();
+
+		var current_scene = this.currentScene();
+		current_scene.init.apply(current_scene, this._reserved_next_scene);
+
+		this._reserved_next_scene = null;
+	}
+};
+Core.prototype.clearCanvas = function() {
+	if (this.is2D()) {
+		// 2D
+		this.ctx.clearRect(0, 0, this.width, this.height);
+	}
+	else if (this.is3D()) {
+		// 3D
+		// TODO:
+	}
+};
+Core.prototype.is2D = function() {
+	return this.ctx ? true : false;
+};
+Core.prototype.is3D = function() {
+	return this.gl ? true : false;
+};
+Core.prototype.handleKeyDown = function(e) {
+	this.current_keyflag |= this._keyCodeToBitCode(e.keyCode);
+	e.preventDefault();
+};
+Core.prototype.handleKeyUp = function(e) {
+	this.current_keyflag &= ~this._keyCodeToBitCode(e.keyCode);
+	e.preventDefault();
+};
+Core.prototype.isKeyDown = function(flag) {
+	return((this.current_keyflag & flag) ? true : false);
+};
+Core.prototype.isKeyPush = function(flag) {
+	// not true if key is pressed in previous frame
+	return !(this.before_keyflag & flag) && this.current_keyflag & flag;
+};
+Core.prototype._keyCodeToBitCode = function(keyCode) {
+	var flag;
+	switch(keyCode) {
+		case 16: // shift
+			flag = CONSTANT.BUTTON_SHIFT;
+			break;
+		case 32: // space
+			flag = CONSTANT.BUTTON_SPACE;
+			break;
+		case 37: // left
+			flag = CONSTANT.BUTTON_LEFT;
+			break;
+		case 38: // up
+			flag = CONSTANT.BUTTON_UP;
+			break;
+		case 39: // right
+			flag = CONSTANT.BUTTON_RIGHT;
+			break;
+		case 40: // down
+			flag = CONSTANT.BUTTON_DOWN;
+			break;
+		case 88: // x
+			flag = CONSTANT.BUTTON_X;
+			break;
+		case 90: // z
+			flag = CONSTANT.BUTTON_Z;
+			break;
+	}
+	return flag;
+};
+Core.prototype.handleGamePad = function() {
+	if(!this.is_connect_gamepad) return;
+	var pads = navigator.getGamepads();
+	var pad = pads[0]; // 1Pコン
+
+	if(!pad) return;
+
+	this.current_keyflag = 0x00;
+	this.current_keyflag |= pad.buttons[1].pressed ? CONSTANT.BUTTON_Z:      0x00;// A
+	this.current_keyflag |= pad.buttons[0].pressed ? CONSTANT.BUTTON_X:      0x00;// B
+	this.current_keyflag |= pad.buttons[2].pressed ? CONSTANT.BUTTON_SELECT: 0x00;// SELECT
+	this.current_keyflag |= pad.buttons[3].pressed ? CONSTANT.BUTTON_START:  0x00;// START
+	this.current_keyflag |= pad.buttons[4].pressed ? CONSTANT.BUTTON_SHIFT:  0x00;// SHIFT
+	this.current_keyflag |= pad.buttons[5].pressed ? CONSTANT.BUTTON_SHIFT:  0x00;// SHIFT
+	this.current_keyflag |= pad.buttons[6].pressed ? CONSTANT.BUTTON_SPACE:  0x00;// SPACE
+	//this.current_keyflag |= pad.buttons[8].pressed ? 0x04 : 0x00;// SELECT
+	//this.current_keyflag |= pad.buttons[9].pressed ? 0x08 : 0x00;// START
+
+	this.current_keyflag |= pad.axes[1] < -0.5 ? CONSTANT.BUTTON_UP:         0x00;// UP
+	this.current_keyflag |= pad.axes[1] >  0.5 ? CONSTANT.BUTTON_DOWN:       0x00;// DOWN
+	this.current_keyflag |= pad.axes[0] < -0.5 ? CONSTANT.BUTTON_LEFT:       0x00;// LEFT
+	this.current_keyflag |= pad.axes[0] >  0.5 ? CONSTANT.BUTTON_RIGHT:      0x00;// RIGHT
+};
+
+Core.prototype.fullscreen = function() {
+	var mainCanvas = this.canvas_dom;
+	if (mainCanvas.requestFullscreen) {
+		mainCanvas.requestFullscreen();
+	}
+	else if (mainCanvas.msRequestuestFullscreen) {
+		mainCanvas.msRequestuestFullscreen();
+	}
+	else if (mainCanvas.mozRequestFullScreen) {
+		mainCanvas.mozRequestFullScreen();
+	}
+	else if (mainCanvas.webkitRequestFullscreen) {
+		mainCanvas.webkitRequestFullscreen();
+	}
+};
+
+// it is done to load fonts
+Core.prototype.fontLoadingDone = function() {
+	this.font_loader.notifyLoadingDone();
+};
+
+Core.prototype.setupEvents = function() {
+	if(!window) return;
+
+	var self = this;
+
+	// setup WebAudio
+	window.AudioContext = (function(){
+		return window.AudioContext || window.webkitAudioContext;
+	})();
+
+	// setup requestAnimationFrame
+	window.requestAnimationFrame = (function(){
+		return window.requestAnimationFrame	||
+			window.webkitRequestAnimationFrame ||
+			window.mozRequestAnimationFrame	||
+			function(callback) { window.setTimeout(callback, 1000 / 60); };
+	})();
+
+
+	// If the browser has `document.fonts`, wait font loading.
+	if(window.document && window.document.fonts) {
+		window.document.fonts.addEventListener('loadingdone', function() { self.fontLoadingDone(); });
+	}
+	else {
+		self.fontLoadingDone();
+	}
+
+	// bind keyboard
+	window.onkeydown = function(e) { self.handleKeyDown(e); };
+	window.onkeyup   = function(e) { self.handleKeyUp(e); };
+
+	// bind gamepad
+	if(window.Gamepad && window.navigator && window.navigator.getGamepads) {
+		self.enableGamePad();
+	}
+};
+
+Core.prototype.createWebGLContext = function(canvas) {
+	var gl;
+	try {
+		gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+		gl = WebGLDebugUtils.makeDebugContext(gl);
+	} catch (e) {
+		throw e;
+	}
+	if (!gl) {
+		throw new Error ("Could not initialize WebGL");
+	}
+
+	return gl;
+};
+
+
+
+
+
+
+module.exports = Core;
+
+},{"./asset_loader/audio":23,"./asset_loader/font":24,"./asset_loader/image":25,"./constant":26,"webgl-debug":29}],28:[function(require,module,exports){
+'use strict';
+module.exports = {
+	util: require("./util"),
+	core: require("./core"),
+	constant: require("./constant"),
+	serif_manager: require("./serif_manager"),
+	scene: {
+		base: require("./scene/base"),
+	},
+	object: {
+		base: require("./object/base"),
+		sprite: require("./object/sprite"),
+		pool_manager: require("./object/pool_manager"),
+	},
+	asset_loader: {
+		image: require("./asset_loader/image"),
+		audio: require("./asset_loader/audio"),
+		font:  require("./asset_loader/font"),
+	},
+	storage: {
+		base: require("./storage/base"),
+		save: require("./storage/save"),
+	},
+
+};
+
+},{"./asset_loader/audio":23,"./asset_loader/font":24,"./asset_loader/image":25,"./constant":26,"./core":27,"./object/base":30,"./object/pool_manager":31,"./object/sprite":32,"./scene/base":33,"./serif_manager":34,"./storage/base":35,"./storage/save":36,"./util":37}],29:[function(require,module,exports){
 (function (global){
 /*
 ** Copyright (c) 2012 The Khronos Group Inc.
@@ -7858,1173 +9001,7 @@ return {
 module.exports = WebGLDebugUtils;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],15:[function(require,module,exports){
-'use strict';
-
-var AssetsConfig = {};
-AssetsConfig.images = {
-	jolicraft:  "./image/jolicraft.png",
-	ldfaithful: "./image/ldfaithful.png",
-	oryx:       "./image/oryx.png",
-};
-
-AssetsConfig.sounds = {
-};
-
-AssetsConfig.bgms = {
-};
-
-
-module.exports = AssetsConfig;
-
-},{}],16:[function(require,module,exports){
-'use strict';
-var glmatrix = require("gl-matrix");
-var Util = require('./hakurei').util;
-
-var Camera = function() {
-	this.matrix = glmatrix.mat4.create();
-	glmatrix.mat4.identity(this.matrix);
-
-	this.theta = [1.7*Math.PI, 0.0, 0.5*Math.PI]; // Rotation about X and Z axes
-	this.center = [0, 0, 0];
-	this.up = [0, 0, 1];
-	this.pos = [0, 0, 0];
-
-	this.thetaLimits = [1.5*Math.PI, 1.8*Math.PI];
-	this.distanceLimits = [2.0, 15.0];
-	this.zoomWeight = 0.1;
-
-	this.currentDistance = (this.distanceLimits[0]+this.distanceLimits[1])/2;
-	this.desiredDistance = this.currentDistance;
-
-	this.updateMatrix();
-};
-/** If there is an object between the camera and the center, move
-	the camera in front of the blocking object */
-Camera.prototype.checkCollision = function(env) {
-	return false;
-};
-
-Camera.prototype.moveCenter = function(pos, offset) {
-	this.center = pos.slice(0);
-	if (offset) {
-		for (var i=0; i<3; i++)
-			this.center[i] += offset[i];
-	}
-};
-
-Camera.prototype.changeAngle = function(dTheta) {
-	this.theta[0] -= dTheta[0];
-	this.theta[1] -= dTheta[1];
-	this.theta[2] -= dTheta[2];
-	this.theta[0] = Util.clamp(this.theta[0], this.thetaLimits[0],this.thetaLimits[1]);
-};
-
-Camera.prototype.setAngle = function(theta) {
-	this.theta = theta;
-	this.theta[0] = Util.clamp(this.theta[0], this.thetaLimits[0],this.thetaLimits[1]);
-};
-
-Camera.prototype.changeDistance = function(amount) {
-	this.desiredDistance += amount;
-	this.desiredDistance = Util.clamp(this.desiredDistance, this.distanceLimits[0],this.distanceLimits[1]);
-};
-
-Camera.prototype.setDistance = function(dist) {
-	this.desiredDistance = dist;
-	this.desiredDistance = Util.clamp(this.desiredDistance, this.distanceLimits[0],this.distanceLimits[1]);
-};
-
-Camera.prototype.sphericalToCartesian = function(origin,r,angles) {
-	return [ 
-		origin[0] + r * Math.sin(angles[0]) * Math.cos(angles[2]),
-		origin[1] + r * Math.sin(angles[0]) * Math.sin(angles[2]),
-		origin[2] + r * Math.cos(angles[0])
-	];
-};
-
-Camera.prototype.updateMatrix = function(env) {
-	for (var i=0; i<3; i++) {
-		if (this.theta[i] < 0)
-			this.theta[i] += 2*Math.PI;
-		else if (this.theta[i] > 2*Math.PI)
-			this.theta[i] -= 2*Math.PI;
-	}
-	if (env) {
-		this.currentDistance *= 1-this.zoomWeight; 
-		this.currentDistance += this.zoomWeight*this.desiredDistance;
-	}
-
-	this.pos = this.sphericalToCartesian(this.center, this.currentDistance, this.theta);
-	glmatrix.mat4.lookAt(this.matrix, this.pos, this.center, this.up);
-};
-
-module.exports = Camera;
-
-},{"./hakurei":24,"gl-matrix":2}],17:[function(require,module,exports){
-'use strict';
-var DEBUG = require("./debug_constant");
-
-var CONSTANT = {
-	DEBUG: {},
-};
-
-if (DEBUG.ON) {
-	CONSTANT.DEBUG = DEBUG;
-}
-module.exports = CONSTANT;
-
-},{"./debug_constant":19}],18:[function(require,module,exports){
-'use strict';
-var programs = require("./programs");
-var PointLight = require("./point_light");
-var CreateData = function(gl){
-		var data = programs(gl);
-
-		// Uniform array of PointLight structs in GLSL
-		setLightUniforms(gl, data.world);
-		setLightUniforms(gl, data.sprites);
-
-		//data.background = [0.5, 0.5, 0.5, 1.0];
-		data.background = [0, 0, 0, 1];
-		data.rotateSpeed = 0.01;
-		data.zoomFactor = 0.01;
-
-		gl.enable(gl.DEPTH_TEST);
-
-		gl.useProgram(data.world.program);
-		return data;
-};
-function setLightUniforms(gl, prog) {
-	// Uniform array of PointLight structs in GLSL
-	prog.u.Light = [];
-	for (var i=0; i<4; i++) {
-		var l = prog.u.Light;
-		l[i] = {};
-		for (var key in new PointLight()) {
-			l[i][key] = gl.getUniformLocation(prog.program, "uLight["+i+"]."+key);
-		}
-	}
-}
-module.exports = CreateData;
-
-},{"./point_light":41,"./programs":42}],19:[function(require,module,exports){
-'use strict';
-var DEBUG = {
-	ON: true,
-	SOUND_OFF: true,
-	START_STAGE_NO: 1,
-};
-
-module.exports = DEBUG;
-
-},{}],20:[function(require,module,exports){
-'use strict';
-var randInt = function(min,max) {
-	if (max == null) {
-		max = min;
-		min = 0;
-	}
-	return Math.floor(Math.random()*(max-min))+min;
-};
-
-var Room = (function() {
-	var Room = function(id,minSize,maxSize,topLeft) {
-		this.id = id;
-		this.connected = false;
-		this.unconnectedNeighbors = [];
-		this.connectedTo = [];
-		var size = [
-			randInt(minSize[0],maxSize[0]),
-			randInt(minSize[1],maxSize[1])
-		];
-		var positionMax = [
-			maxSize[0] - size[0],
-			maxSize[1] - size[1]
-		];
-		var position = [
-			topLeft[0] + randInt(positionMax[0]) + 1,
-			topLeft[1] + randInt(positionMax[1]) + 1
-		];
-		this.rect = [position[0],position[1],size[0],size[1]];
-	};
-	Room.prototype.removeFromUnconnected = function(roomId) {
-		for (var i=0; i<this.unconnectedNeighbors.length; i++) {
-			if (this.unconnectedNeighbors[i].id == roomId) {
-				this.unconnectedNeighbors.splice(i,1);
-				return;
-			}
-		}
-	};
-	Room.prototype.connectTo = function(roomIndex) {
-		var newlyConnected = this.unconnectedNeighbors[roomIndex];
-		this.connectedTo.push(newlyConnected);
-		this.unconnectedNeighbors.splice(roomIndex,1);
-		//newlyConnected.connectedTo.push(this);
-		newlyConnected.removeFromUnconnected(this.id);
-		this.connected = true;
-		newlyConnected.connected = true;
-
-		return newlyConnected;
-	};
-	Room.prototype.connectRandom = function() {
-		if (this.unconnectedNeighbors.length == 0)
-			return false;
-		var roomIndex = randInt(this.unconnectedNeighbors.length);
-		return this.connectTo(roomIndex);
-	};
-	Room.prototype.connectToConnected = function() {
-		var candidates = [];
-		for (var i=0; i<this.unconnectedNeighbors.length; i++)
-			candidates.push(i);
-		while (candidates.length > 0) {
-			var index = randInt(candidates.length);
-			if (this.unconnectedNeighbors[candidates[index]].connected) 
-				return this.connectTo(candidates[index]);
-			else
-				candidates.splice(index,1);
-		}
-		return false;
-	};
-	return Room;
-})();
-
-var Dungeon = function(tileDim, roomDim, roomMinSize) {
-	this.tileDim = tileDim;
-	this.roomDim = roomDim;
-	this.numRooms = roomDim[0]*roomDim[1];
-	this.roomGrid = [
-		Math.floor(tileDim[0]/roomDim[0]),
-		Math.floor(tileDim[1]/roomDim[1])
-	];
-	this.rooms = [];
-	this.firstRoom = 0;
-	this.lastRoom = 0;
-
-	this.tileVals = {
-		wall:  "#",
-		floor: " ",
-		empty: ".",
-		up:    "u",
-		down:  "d",
-	}
-	
-	var tiles = [];
-	for (var i=0; i<tileDim[0]; i++) {
-		tiles[i] = [];
-		for (var j=0; j<tileDim[1]; j++)
-			tiles[i][j] = this.tileVals.wall;
-	}
-	this.tiles = tiles;
-	
-	var roomMaxSize = [
-		tileDim[0]/roomDim[0]-2,
-		tileDim[1]/roomDim[1]-2
-	];
-	if (!roomMinSize)
-		roomMinSize = [2,2];
-	var rooms = [];
-	for (var i=0; i<roomDim[0]; i++) {
-		rooms[i] = [];
-		for (var j=0; j<roomDim[1]; j++)
-			rooms[i][j] = new Room(
-				i*roomDim[0]+j,
-				roomMinSize,
-				roomMaxSize, 
-				[this.roomGrid[0]*i, this.roomGrid[1]*j]
-			);
-	}
-	for (var i=0; i<roomDim[0]; i++) {
-		for (var j=0; j<roomDim[1]; j++) {
-			if (i>0)
-				rooms[i][j].unconnectedNeighbors.push(rooms[i-1][j]);
-			if (i<roomDim[0]-1)
-				rooms[i][j].unconnectedNeighbors.push(rooms[i+1][j]);
-			if (j>0)
-				rooms[i][j].unconnectedNeighbors.push(rooms[i][j-1]);
-			if (j<roomDim[1]-1)
-				rooms[i][j].unconnectedNeighbors.push(rooms[i][j+1]);
-		}
-	}
-	this.rooms = rooms;
-	
-
-	this.getRoomFromCoords = function(x,y) {
-		return this.rooms[x*this.rooms.length][y];
-	};
-
-	this.getRoomFromId = function(id) {
-		return this.rooms[Math.floor(id/this.roomDim[0])][id%this.roomDim[1]];
-	};
-	
-	this.generate = function() {
-		var unconnected = [];
-		for (var i=0; i<this.numRooms; i++)
-			unconnected[i] = i;
-
-		// See http://kuoi.com/~kamikaze/GameDesign/art07_rogue_dungeon.php
-		var roomId = randInt(this.numRooms);
-		var current = this.getRoomFromId(roomId);
-		var firstRoom = roomId;
-		while (current && current.unconnectedNeighbors.length > 0) {
-			roomId = current.id;
-			var roomIndex = unconnected.indexOf(roomId);
-			if (roomIndex >= 0)
-				unconnected.splice(roomIndex,1);
-			current = current.connectRandom();
-		}
-		while (unconnected.length > 0) {
-			var roomNum = randInt(unconnected.length);
-			current = this.getRoomFromId(unconnected[roomNum]);
-			if (current.connectToConnected()) 
-				unconnected.splice(roomNum,1);
-		}
-		var lastRoom = current.id;
-
-		// Draw and connect rooms
-		for (var i=0; i<this.numRooms; i++) {
-			var room = this.getRoomFromId(i);
-			this.fillRoom(room);
-			for (var j=0; j<room.connectedTo.length; j++) {
-				this.connectRooms(room,room.connectedTo[j]);
-			}
-		}
-
-		// Place up stairs
-		var room = this.getRoomFromId(firstRoom);
-		this.upStairsPos = [
-			room.rect[0] + randInt(room.rect[2]),
-			room.rect[1] + randInt(room.rect[3]),
-		];
-		this.plot(this.upStairsPos[0],this.upStairsPos[1],this.tileVals.up);
-		room = this.getRoomFromId(lastRoom);
-		this.downStairsPos = [
-			room.rect[0] + randInt(room.rect[2]),
-			room.rect[1] + randInt(room.rect[3]),
-		];
-		this.plot(this.downStairsPos[0],this.downStairsPos[1],this.tileVals.down);
-		this.cleanUpWalls();
-	};
-
-	this.plot = function(x,y,val) {
-		if (!val)
-			val = this.tileVals.floor;
-		this.tiles[Math.floor(x)][Math.floor(y)] = val;
-	};
-
-	this.fillRoom = function(room) {
-		for (var i=room.rect[0]; i<room.rect[0]+room.rect[2]; i++)
-			for (var j=room.rect[1]; j<room.rect[1]+room.rect[3]; j++)
-				this.plot(i,j);
-	};
-
-	// Bresenham's line algorithm
-	// Thanks to: http://stackoverflow.com/a/4672319/1887090
-	this.fillHallway = function(x0,y0,x1,y1) {
-		var dx = Math.abs(x1-x0);
-		var dy = Math.abs(y1-y0);
-		var sx = (x0 < x1) ? 1 : -1;
-		var sy = (y0 < y1) ? 1 : -1;
-		var err = dx-dy;
-
-		for(;;) {
-			this.plot(x0,y0);
-			this.plot(x0-1,y0);
-			this.plot(x0+1,y0);
-			this.plot(x0,y0-1);
-			this.plot(x0,y0+1);
-
-			if (x0==x1 && y0==y1) 
-				break;
-
-			var e2 = 2*err;
-			if (e2 >-dy) { 
-				err -= dy; 
-				x0 += sx; 
-			}
-			if (e2 < dx) { 
-				err += dx; 
-				y0 += sy; 
-			}
-		}
-	}
-
-	this.connectRooms = function(room1,room2) {
-		this.fillHallway(
-			Math.floor(room1.rect[0] + room1.rect[2]/2),
-			Math.floor(room1.rect[1] + room1.rect[3]/2),
-			Math.floor(room2.rect[0] + room2.rect[2]/2),
-			Math.floor(room2.rect[1] + room2.rect[3]/2)
-		);
-	};
-
-	this.cleanUpWalls = function() {
-		for (var i=0; i<this.tileDim[0]; i++) {
-			for (var j=0; j<this.tileDim[1]; j++) {
-				if (this.tiles[i][j] != this.tileVals.wall)
-					continue;
-
-				if (i>0 && this.isWalkable(i-1,j)
-					|| i<this.tileDim[0]-1 && this.isWalkable(i+1,j)
-					|| j>0 && this.isWalkable(i,j-1)
-					|| j<this.tileDim[1]-1 && this.isWalkable(i,j+1)
-				)
-					continue;
-				this.tiles[i][j] = this.tileVals.empty;
-			}
-		}
-	}
-
-	this.isWalkable = function(x,y) {
-		return this.tiles[x][y] != this.tileVals.wall && this.tiles[x][y] != this.tileVals.empty;
-	}
-
-	this.printDungeon = function() {
-		var str = "";
-		for (var i=0; i<this.tileDim[0]; i++) {
-			str += "\n";
-			for (var j=0; j<this.tileDim[1]; j++)
-				str += this.tiles[i][j];
-		}
-		console.log(str);
-	}
-	this.generate();
-};
-
-module.exports = Dungeon;
-
-},{}],21:[function(require,module,exports){
-'use strict';
-var Dungeon = require("./dungeon");
-
-var DungeonConvert = function(level) {
-	var cubes = [];
-	var upstairs = [0,0,0];
-	var downstairs = [0,0,0];
-	var tileDim = level.tileDim;
-	var roomDim = level.roomDim;
-	var roomMinSize = level.roomMinSize;
-	var d = new Dungeon(tileDim,roomDim,roomMinSize);
-
-	for (var z=0; z<2; z++) {
-		cubes[z] = [];
-		for (var y=0; y<d.tileDim[1]; y++) {
-			cubes[z][y] = [];
-			for (var x=0; x<d.tileDim[0]; x++) {
-				switch(d.tiles[x][y]) {
-				case d.tileVals.empty:
-					cubes[z][y][x] = 0; break;
-				case d.tileVals.wall:
-					cubes[z][y][x] = getWall(z); break;
-				case d.tileVals.floor:
-					cubes[z][y][x] = getFloor(z); break;
-				case d.tileVals.up:
-					cubes[z][y][x] = getUp(z); 
-					upstairs = [x,y,1.2];
-					break;
-				case d.tileVals.down:
-					cubes[z][y][x] = getDown(z); 
-					downstairs = [x,y,1.2];
-					break;
-				}
-			}
-		}
-	}
-	return {
-		cubes: cubes,
-		upstairs: upstairs,
-		downstairs: downstairs
-	};
-
-	function randFromArray(arr) {
-		return arr[Math.floor(Math.random()*arr.length)];
-	}
-
-	function getWall(z) {
-		if (z == 0)
-			return 0;
-		return randFromArray(level.wallTiles);
-	}
-	function getFloor(z) {
-		if (z > 0)
-			return 0;
-		return randFromArray(level.floorTiles);
-	}
-	function getUp(z) {
-		if (z > 0)
-			return 0;
-		return 212;
-	}
-	function getDown(z) {
-		if (z > 0)
-			return 0;
-		return 211;
-	}
-};
-module.exports = DungeonConvert;
-
-},{"./dungeon":20}],22:[function(require,module,exports){
-'use strict';
-var core = require('./hakurei').core;
-var util = require('./hakurei').util;
-var CONSTANT = require('./constant');
-var createWebGL = require('./gl'); //WebGL
-
-var SceneLoading = require('./scene/loading');
-var SceneStage = require('./scene/stage');
-
-var Game = function(canvas) {
-	core.apply(this, arguments);
-};
-util.inherit(Game, core);
-
-Game.prototype.init = function () {
-	core.prototype.init.apply(this, arguments);
-
-	this.addScene("loading", new SceneLoading(this));
-	this.addScene("stage", new SceneStage(this));
-
-	this.changeScene("loading");
-};
-Game.prototype.playSound = function () {
-	if (CONSTANT.DEBUG.SOUND_OFF) return;
-	return this.audio_loader.playSound.apply(this.audio_loader, arguments);
-};
-Game.prototype.playBGM = function () {
-	if (CONSTANT.DEBUG.SOUND_OFF) return;
-	return this.audio_loader.playBGM.apply(this.audio_loader, arguments);
-};
-Game.prototype.stopBGM = function () {
-	if (CONSTANT.DEBUG.SOUND_OFF) return;
-	return this.audio_loader.stopBGM.apply(this.audio_loader, arguments);
-};
-
-module.exports = Game;
-
-},{"./constant":17,"./gl":23,"./hakurei":24,"./scene/loading":43,"./scene/stage":44}],23:[function(require,module,exports){
-'use strict';
-
-var WebGLDebugUtils = require("webgl-debug");
-
-var createWebGLContext = function (canvas) {
-	var gl;
-	try {
-		gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-		gl = WebGLDebugUtils.makeDebugContext(gl);
-	} catch (e) {
-		window.alert(e);
-	}
-	if (!gl) {
-		window.alert("Could not initialize WebGL");
-	}
-
-	return gl;
-};
-
-module.exports = createWebGLContext;
-
-},{"webgl-debug":14}],24:[function(require,module,exports){
-'use strict';
-
-module.exports = require("./hakureijs/index");
-
-},{"./hakureijs/index":30}],25:[function(require,module,exports){
-'use strict';
-
-var AudioLoader = function() {
-	this.sounds = {};
-	this.bgms = {};
-
-	this.loading_audio_num = 0;
-	this.loaded_audio_num = 0;
-
-	this.id = 0;
-
-	// flag which determine what sound.
-	this.soundflag = 0x00;
-
-	this.audio_context = new window.AudioContext();
-
-	// for legacy browser
-	this.audio_context.createGain = this.audio_context.createGain || this.audio_context.createGainNode;
-	// playing AudioBufferSourceNode instance
-	this.audio_source = null;
-
-
-};
-AudioLoader.prototype.init = function() {
-	// TODO: cancel already loading bgms and sounds
-
-	this.sounds = {};
-	this.bgms = {};
-
-	this.loading_audio_num = 0;
-	this.loaded_audio_num = 0;
-
-	this.id = 0;
-
-	this.soundflag = 0x00;
-};
-
-AudioLoader.prototype.loadSound = function(name, path, volume) {
-	var self = this;
-	self.loading_audio_num++;
-
-	if(!volume) volume = 1.0;
-
-
-	// it's done to load sound
-	var onload_function = function() {
-		self.loaded_audio_num++;
-	};
-
-	var audio = new Audio(path);
-	audio.volume = volume;
-	audio.addEventListener('canplay', onload_function);
-	audio.load();
-	self.sounds[name] = {
-		id: 1 << self.id++,
-		audio: audio,
-	};
-};
-
-AudioLoader.prototype.loadBGM = function(name, path, volume, loopStart, loopEnd) {
-	var self = this;
-	self.loading_audio_num++;
-
-	// it's done to load audio
-	var successCallback = function(audioBuffer) {
-		self.loaded_audio_num++;
-		self.bgms[name] = {
-			audio:     audioBuffer,
-			volume:    volume,
-			loopStart: loopStart,
-			loopEnd:   loopEnd,
-		};
-	};
-
-	var errorCallback = function(error) {
-		if (error instanceof Error) {
-			throw new Error(error.message);
-		} else {
-			throw error;
-		}
-	};
-
-	var xhr = new XMLHttpRequest();
-	xhr.onload = function() {
-		if(xhr.status !== 200) {
-			return;
-		}
-
-		var arrayBuffer = xhr.response;
-
-		// decode
-		self.audio_context.decodeAudioData(arrayBuffer, successCallback, errorCallback);
-	};
-
-	xhr.open('GET', path, true);
-	xhr.responseType = 'arraybuffer';
-	xhr.send(null);
-};
-
-AudioLoader.prototype.isAllLoaded = function() {
-	return this.loaded_audio_num > 0 && this.loaded_audio_num === this.loading_audio_num;
-};
-
-AudioLoader.prototype.playSound = function(name) {
-	this.soundflag |= this.sounds[name].id;
-};
-
-AudioLoader.prototype.executePlaySound = function() {
-
-	for(var name in this.sounds) {
-		if(this.soundflag & this.sounds[name].id) {
-			// play
-			this.sounds[name].audio.pause();
-			this.sounds[name].audio.currentTime = 0;
-			this.sounds[name].audio.play();
-
-			// delete flag
-			this.soundflag &= ~this.sounds[name].id;
-
-		}
-	}
-};
-AudioLoader.prototype.playBGM = function(name) {
-	var self = this;
-
-	// stop playing bgm
-	self.stopBGM();
-
-	self.audio_source = self._createSourceNode(name);
-	self.audio_source.start(0);
-};
-AudioLoader.prototype.stopBGM = function() {
-	var self = this;
-	if(self.isPlayingBGM()) {
-		self.audio_source.stop(0);
-		self.audio_source = null;
-	}
-};
-AudioLoader.prototype.isPlayingBGM = function() {
-	return this.audio_source ? true : false;
-};
-
-// create AudioBufferSourceNode instance
-AudioLoader.prototype._createSourceNode = function(name) {
-	var self = this;
-	var data = self.bgms[name];
-
-	var source = self.audio_context.createBufferSource();
-	source.buffer = data.audio;
-
-	if(data.loopStart || data.loopEnd) { source.loop = true; }
-	if(data.loopStart) { source.loopStart = data.loopStart; }
-	if(data.loopEnd)   { source.loopEnd = data.loopEnd; }
-
-	var audio_gain = this.audio_context.createGain();
-	audio_gain.gain.value = data.volume || 1.0;
-
-	source.connect(audio_gain);
-
-	audio_gain.connect(self.audio_context.destination);
-	source.start = source.start || source.noteOn;
-	source.stop  = source.stop  || source.noteOff;
-
-	return source;
-};
-
-AudioLoader.prototype.progress = function() {
-	return this.loaded_audio_num / this.loading_audio_num;
-};
-
-
-module.exports = AudioLoader;
-
-},{}],26:[function(require,module,exports){
-'use strict';
-
-var FontLoader = function() {
-	this.is_done = false;
-};
-FontLoader.prototype.init = function() {
-	this.is_done = false;
-};
-FontLoader.prototype.isAllLoaded = function() {
-	return this.is_done;
-};
-
-FontLoader.prototype.notifyLoadingDone = function() {
-	this.is_done = true;
-};
-
-FontLoader.prototype.progress = function() {
-	return this.is_done ? 1 : 0;
-};
-
-
-
-
-module.exports = FontLoader;
-
-},{}],27:[function(require,module,exports){
-'use strict';
-
-var ImageLoader = function() {
-	this.images = {};
-
-	this.loading_image_num = 0;
-	this.loaded_image_num = 0;
-};
-ImageLoader.prototype.init = function() {
-	// cancel already loading images
-	for(var name in this.images){
-		this.images[name].src = "";
-	}
-
-	this.images = {};
-
-	this.loading_image_num = 0;
-	this.loaded_image_num = 0;
-};
-
-ImageLoader.prototype.loadImage = function(name, path) {
-	var self = this;
-
-	self.loading_image_num++;
-
-	// it's done to load image
-	var onload_function = function() {
-		self.loaded_image_num++;
-	};
-
-	var image = new Image();
-	image.src = path;
-	image.onload = onload_function;
-	this.images[name] = image;
-};
-
-ImageLoader.prototype.isAllLoaded = function() {
-	return this.loaded_image_num > 0 && this.loaded_image_num === this.loading_image_num;
-};
-
-ImageLoader.prototype.getImage = function(name) {
-	return this.images[name];
-};
-
-ImageLoader.prototype.progress = function() {
-	return this.loaded_image_num / this.loading_image_num;
-};
-
-
-
-
-module.exports = ImageLoader;
-
-},{}],28:[function(require,module,exports){
-'use strict';
-
-var Constant = {
-	BUTTON_LEFT:  0x01,
-	BUTTON_UP:    0x02,
-	BUTTON_RIGHT: 0x04,
-	BUTTON_DOWN:  0x08,
-	BUTTON_Z:     0x10,
-	BUTTON_X:     0x20,
-	BUTTON_SHIFT: 0x40,
-	BUTTON_SPACE: 0x80,
-};
-
-module.exports = Constant;
-
-},{}],29:[function(require,module,exports){
-'use strict';
-var WebGLDebugUtils = require("webgl-debug");
-var CONSTANT = require("./constant");
-var ImageLoader = require("./asset_loader/image");
-var AudioLoader = require("./asset_loader/audio");
-var FontLoader = require("./asset_loader/font");
-
-var Core = function(canvas, options) {
-	if(!options) {
-		options = {};
-	}
-
-	this.canvas_dom = canvas;
-	this.ctx = null; // 2D context
-	this.gl  = null; // 3D context
-
-	if(options.webgl) {
-		this.gl = this.createWebGLContext(this.canvas_dom);
-	}
-	else {
-		this.ctx = this.canvas_dom.getContext('2d');
-	}
-
-	this.width = Number(canvas.getAttribute('width'));
-	this.height = Number(canvas.getAttribute('height'));
-
-	this.current_scene = null;
-	this._reserved_next_scene = null; // next scene which changes next frame run
-	this.scenes = {};
-
-	this.frame_count = 0;
-
-	this.request_id = null;
-
-	this.current_keyflag = 0x0;
-	this.before_keyflag = 0x0;
-
-	this.is_connect_gamepad = false;
-
-	this.image_loader = new ImageLoader();
-	this.audio_loader = new AudioLoader();
-	this.font_loader = new FontLoader();
-};
-Core.prototype.init = function () {
-	this.current_scene = null;
-	this._reserved_next_scene = null; // next scene which changes next frame run
-
-	this.frame_count = 0;
-
-	this.request_id = null;
-
-	this.current_keyflag = 0x0;
-	this.before_keyflag = 0x0;
-
-	this.image_loader.init();
-};
-Core.prototype.enableGamePad = function () {
-	this.is_connect_gamepad = true;
-};
-
-Core.prototype.isRunning = function () {
-	return this.request_id ? true : false;
-};
-Core.prototype.startRun = function () {
-	if(this.isRunning()) return;
-
-	this.run();
-};
-Core.prototype.run = function(){
-	// get gamepad input
-	this.handleGamePad();
-
-	// go to next scene if next scene is set
-	this.changeNextSceneIfReserved();
-
-	// play sound which already set to play
-	this.audio_loader.executePlaySound();
-
-	var current_scene = this.currentScene();
-	if(current_scene) {
-		current_scene.beforeDraw();
-
-		// clear already rendered canvas
-		this.clearCanvas();
-
-		current_scene.draw();
-		current_scene.afterDraw();
-	}
-
-	/*
-
-	if(Config.DEBUG) {
-		this._renderFPS();
-	}
-
-	// play sound effects
-	this.runPlaySound();
-	*/
-
-	// save key current pressed keys
-	this.before_keyflag = this.current_keyflag;
-
-	this.frame_count++;
-
-	// tick
-	this.request_id = requestAnimationFrame(this.run.bind(this));
-};
-Core.prototype.currentScene = function() {
-	if(this.current_scene === null) {
-		return;
-	}
-
-	return this.scenes[this.current_scene];
-};
-
-Core.prototype.addScene = function(name, scene) {
-	this.scenes[name] = scene;
-};
-Core.prototype.changeScene = function() {
-	var args = Array.prototype.slice.call(arguments); // to convert array object
-	this._reserved_next_scene = args;
-};
-Core.prototype.changeNextSceneIfReserved = function() {
-	if(this._reserved_next_scene) {
-		this.current_scene = this._reserved_next_scene.shift();
-
-		var current_scene = this.currentScene();
-		current_scene.init.apply(current_scene, this._reserved_next_scene);
-
-		this._reserved_next_scene = null;
-	}
-};
-Core.prototype.clearCanvas = function() {
-	if (this.is2D()) {
-		// 2D
-		this.ctx.clearRect(0, 0, this.width, this.height);
-	}
-	else if (this.is3D()) {
-		// 3D
-		// TODO:
-	}
-};
-Core.prototype.is2D = function() {
-	return this.ctx ? true : false;
-};
-Core.prototype.is3D = function() {
-	return this.gl ? true : false;
-};
-Core.prototype.handleKeyDown = function(e) {
-	this.current_keyflag |= this._keyCodeToBitCode(e.keyCode);
-	e.preventDefault();
-};
-Core.prototype.handleKeyUp = function(e) {
-	this.current_keyflag &= ~this._keyCodeToBitCode(e.keyCode);
-	e.preventDefault();
-};
-Core.prototype.isKeyDown = function(flag) {
-	return((this.current_keyflag & flag) ? true : false);
-};
-Core.prototype.isKeyPush = function(flag) {
-	// not true if key is pressed in previous frame
-	return !(this.before_keyflag & flag) && this.current_keyflag & flag;
-};
-Core.prototype._keyCodeToBitCode = function(keyCode) {
-	var flag;
-	switch(keyCode) {
-		case 16: // shift
-			flag = CONSTANT.BUTTON_SHIFT;
-			break;
-		case 32: // space
-			flag = CONSTANT.BUTTON_SPACE;
-			break;
-		case 37: // left
-			flag = CONSTANT.BUTTON_LEFT;
-			break;
-		case 38: // up
-			flag = CONSTANT.BUTTON_UP;
-			break;
-		case 39: // right
-			flag = CONSTANT.BUTTON_RIGHT;
-			break;
-		case 40: // down
-			flag = CONSTANT.BUTTON_DOWN;
-			break;
-		case 88: // x
-			flag = CONSTANT.BUTTON_X;
-			break;
-		case 90: // z
-			flag = CONSTANT.BUTTON_Z;
-			break;
-	}
-	return flag;
-};
-Core.prototype.handleGamePad = function() {
-	if(!this.is_connect_gamepad) return;
-	var pads = navigator.getGamepads();
-	var pad = pads[0]; // 1Pコン
-
-	if(!pad) return;
-
-	this.current_keyflag = 0x00;
-	this.current_keyflag |= pad.buttons[1].pressed ? CONSTANT.BUTTON_Z:      0x00;// A
-	this.current_keyflag |= pad.buttons[0].pressed ? CONSTANT.BUTTON_X:      0x00;// B
-	this.current_keyflag |= pad.buttons[2].pressed ? CONSTANT.BUTTON_SELECT: 0x00;// SELECT
-	this.current_keyflag |= pad.buttons[3].pressed ? CONSTANT.BUTTON_START:  0x00;// START
-	this.current_keyflag |= pad.buttons[4].pressed ? CONSTANT.BUTTON_SHIFT:  0x00;// SHIFT
-	this.current_keyflag |= pad.buttons[5].pressed ? CONSTANT.BUTTON_SHIFT:  0x00;// SHIFT
-	this.current_keyflag |= pad.buttons[6].pressed ? CONSTANT.BUTTON_SPACE:  0x00;// SPACE
-	//this.current_keyflag |= pad.buttons[8].pressed ? 0x04 : 0x00;// SELECT
-	//this.current_keyflag |= pad.buttons[9].pressed ? 0x08 : 0x00;// START
-
-	this.current_keyflag |= pad.axes[1] < -0.5 ? CONSTANT.BUTTON_UP:         0x00;// UP
-	this.current_keyflag |= pad.axes[1] >  0.5 ? CONSTANT.BUTTON_DOWN:       0x00;// DOWN
-	this.current_keyflag |= pad.axes[0] < -0.5 ? CONSTANT.BUTTON_LEFT:       0x00;// LEFT
-	this.current_keyflag |= pad.axes[0] >  0.5 ? CONSTANT.BUTTON_RIGHT:      0x00;// RIGHT
-};
-
-Core.prototype.fullscreen = function() {
-	var mainCanvas = this.canvas_dom;
-	if (mainCanvas.requestFullscreen) {
-		mainCanvas.requestFullscreen();
-	}
-	else if (mainCanvas.msRequestuestFullscreen) {
-		mainCanvas.msRequestuestFullscreen();
-	}
-	else if (mainCanvas.mozRequestFullScreen) {
-		mainCanvas.mozRequestFullScreen();
-	}
-	else if (mainCanvas.webkitRequestFullscreen) {
-		mainCanvas.webkitRequestFullscreen();
-	}
-};
-
-// it is done to load fonts
-Core.prototype.fontLoadingDone = function() {
-	this.font_loader.notifyLoadingDone();
-};
-
-Core.prototype.setupEvents = function() {
-	if(!window) return;
-
-	var self = this;
-
-	// setup WebAudio
-	window.AudioContext = (function(){
-		return window.AudioContext || window.webkitAudioContext;
-	})();
-
-	// setup requestAnimationFrame
-	window.requestAnimationFrame = (function(){
-		return window.requestAnimationFrame	||
-			window.webkitRequestAnimationFrame ||
-			window.mozRequestAnimationFrame	||
-			function(callback) { window.setTimeout(callback, 1000 / 60); };
-	})();
-
-
-	// If the browser has `document.fonts`, wait font loading.
-	if(window.document && window.document.fonts) {
-		window.document.fonts.addEventListener('loadingdone', function() { self.fontLoadingDone(); });
-	}
-	else {
-		self.fontLoadingDone();
-	}
-
-	// bind keyboard
-	window.onkeydown = function(e) { self.handleKeyDown(e); };
-	window.onkeyup   = function(e) { self.handleKeyUp(e); };
-
-	// bind gamepad
-	if(window.Gamepad && window.navigator && window.navigator.getGamepads) {
-		self.enableGamePad();
-	}
-};
-
-Core.prototype.createWebGLContext = function(canvas) {
-	var gl;
-	try {
-		gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-		gl = WebGLDebugUtils.makeDebugContext(gl);
-	} catch (e) {
-		throw e;
-	}
-	if (!gl) {
-		throw new Error ("Could not initialize WebGL");
-	}
-
-	return gl;
-};
-
-
-
-
-
-
-module.exports = Core;
-
-},{"./asset_loader/audio":25,"./asset_loader/font":26,"./asset_loader/image":27,"./constant":28,"webgl-debug":14}],30:[function(require,module,exports){
-'use strict';
-module.exports = {
-	util: require("./util"),
-	core: require("./core"),
-	constant: require("./constant"),
-	serif_manager: require("./serif_manager"),
-	scene: {
-		base: require("./scene/base"),
-	},
-	object: {
-		base: require("./object/base"),
-		sprite: require("./object/sprite"),
-		pool_manager: require("./object/pool_manager"),
-	},
-	asset_loader: {
-		image: require("./asset_loader/image"),
-		audio: require("./asset_loader/audio"),
-		font:  require("./asset_loader/font"),
-	},
-	storage: {
-		base: require("./storage/base"),
-		save: require("./storage/save"),
-	},
-
-};
-
-},{"./asset_loader/audio":25,"./asset_loader/font":26,"./asset_loader/image":27,"./constant":28,"./core":29,"./object/base":31,"./object/pool_manager":32,"./object/sprite":33,"./scene/base":34,"./serif_manager":35,"./storage/base":36,"./storage/save":37,"./util":38}],31:[function(require,module,exports){
+},{}],30:[function(require,module,exports){
 'use strict';
 
 var util = require('../util');
@@ -9248,7 +9225,7 @@ ObjectBase.prototype.setVelocity = function(velocity) {
 module.exports = ObjectBase;
 
 
-},{"../util":38}],32:[function(require,module,exports){
+},{"../util":37}],31:[function(require,module,exports){
 'use strict';
 
 // TODO: add pooling logic
@@ -9335,7 +9312,7 @@ PoolManager.prototype.checkCollisionWithManager = function(manager) {
 
 module.exports = PoolManager;
 
-},{"../util":38,"./base":31}],33:[function(require,module,exports){
+},{"../util":37,"./base":30}],32:[function(require,module,exports){
 'use strict';
 var base_object = require('./base');
 var util = require('../util');
@@ -9473,7 +9450,7 @@ Sprite.prototype.isReflect = function(){
 
 module.exports = Sprite;
 
-},{"../util":38,"./base":31}],34:[function(require,module,exports){
+},{"../util":37,"./base":30}],33:[function(require,module,exports){
 'use strict';
 
 var SceneBase = function(core, scene) {
@@ -9580,7 +9557,7 @@ SceneBase.prototype.y = function(val) {
 module.exports = SceneBase;
 
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 'use strict';
 
 var SerifManager = function () {
@@ -9734,7 +9711,7 @@ SerifManager.prototype.lines = function () {
 
 module.exports = SerifManager;
 
-},{}],36:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9898,7 +9875,7 @@ StorageBase.prototype._removeWebStorage = function() {
 module.exports = StorageBase;
 
 }).call(this,require('_process'))
-},{"_process":13,"fs":1,"path":12}],37:[function(require,module,exports){
+},{"_process":13,"fs":1,"path":12}],36:[function(require,module,exports){
 'use strict';
 var base_class = require('./base');
 var util = require('../util');
@@ -9920,7 +9897,7 @@ StorageSave.KEY = function(){
 
 module.exports = StorageSave;
 
-},{"../util":38,"./base":36}],38:[function(require,module,exports){
+},{"../util":37,"./base":35}],37:[function(require,module,exports){
 'use strict';
 var Util = {
 	inherit: function( child, parent ) {
@@ -9967,7 +9944,7 @@ var Util = {
 
 module.exports = Util;
 
-},{}],39:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 var Level = function(ambient,floorTiles,wallTiles,tileDim,roomDim,roomMinSize) {
 	this.tileDim = tileDim;
@@ -9994,7 +9971,7 @@ Level.getLevel = function(l) {
 };
 module.exports = Level;
 
-},{}],40:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 var Game = require('./game');
 
@@ -10039,7 +10016,7 @@ window.changeFullScreen = function () {
 	game.fullscreen();
 };
 
-},{"./game":22}],41:[function(require,module,exports){
+},{"./game":21}],40:[function(require,module,exports){
 'use strict';
 var PointLight = function(color, position, attenuation, enabled) {
 	this.color = color ? color : [1.0, 1.0, 1.0];
@@ -10057,7 +10034,7 @@ PointLight.prototype.update = function() {
 };
 module.exports = PointLight;
 
-},{}],42:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 'use strict';
 var glmat = require("gl-matrix");
 var worldV = require("./shader/world.vs");
@@ -10199,7 +10176,7 @@ var programs = function (gl) {
 };
 module.exports = programs;
 
-},{"./shader/billboard.vs":45,"./shader/depth.fs":46,"./shader/depth.vs":47,"./shader/world.fs":48,"./shader/world.vs":49,"gl-matrix":2}],43:[function(require,module,exports){
+},{"./shader/billboard.vs":44,"./shader/depth.fs":45,"./shader/depth.vs":46,"./shader/world.fs":47,"./shader/world.vs":48,"gl-matrix":2}],42:[function(require,module,exports){
 'use strict';
 
 // ローディングシーン
@@ -10295,7 +10272,7 @@ SceneLoading.prototype.progress = function(){
 
 module.exports = SceneLoading;
 
-},{"../assets_config":15,"../hakurei":24}],44:[function(require,module,exports){
+},{"../assets_config":14,"../hakurei":22}],43:[function(require,module,exports){
 'use strict';
 
 /*
@@ -10329,7 +10306,6 @@ var base_scene = require('../hakurei').scene.base;
 var CONSTANT = require('../hakurei').constant;
 var util = require('../hakurei').util;
 var AssetsConfig = require('../assets_config');
-var createWebGLContext = require('../gl');
 var TextureAtlas = require('../texture');
 var Terrain = require('../terrain');
 var Camera = require('../camera');
@@ -10558,22 +10534,22 @@ SceneLoading.prototype.handleInputs = function() {
 };
 module.exports = SceneLoading;
 
-},{"../assets_config":15,"../camera":16,"../data":18,"../dungeon_convert":21,"../gl":23,"../hakurei":24,"../level":39,"../point_light":41,"../sprites":51,"../terrain":52,"../texture":53,"gl-matrix":2}],45:[function(require,module,exports){
+},{"../assets_config":14,"../camera":15,"../data":17,"../dungeon_convert":20,"../hakurei":22,"../level":38,"../point_light":40,"../sprites":50,"../terrain":51,"../texture":52,"gl-matrix":2}],44:[function(require,module,exports){
 module.exports = "#define M_PI 3.1415926535897932384626433832795\n\nattribute vec3 aPosition;\nattribute vec3 aOffset;\nattribute vec2 aTexture;\nattribute float aMoving;\nattribute float aFlipped;\n\nuniform vec3 uCamPos;\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\nuniform float uCounter;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nconst vec3 camUp = vec3(0.0, 0.0, 1.0);\n\nvoid main(void) {\n\t// Billboarding\n\tvec3 look = normalize(uCamPos - aPosition);\n\tvec3 right = normalize(cross(camUp, look));\n\tvec3 up = normalize(cross(look, right));\n\n\tvec3 offset = aOffset;\n\tif (aMoving > 0.5 && offset.z < 0.5) {\n\t\t// Walking wobble animation\n\t\tfloat t = mod(1.5*uCounter/M_PI,2.0*M_PI);\n\t\tt = (abs(t-M_PI)-0.5*M_PI)*0.25;\n\t\tfloat x = offset.x;\n\t\tfloat z = offset.z;\n\t\tfloat c = cos(t);\n\t\tfloat s = sin(t);\n\t\toffset.x = x*c - z*s;\n\t\toffset.z = x*s + z*c;\n\t\tif (x < 0.0)\n\t\t\toffset.z *= 0.70;\n\t}\n\telse {\n\t\t// Idle wobble animation\n\t\tfloat t = mod(uCounter/M_PI,2.0*M_PI);\n\n\t\tvec3 mult = vec3(0.05, 0.0, 0.13);\n\t\tif (offset.x < 0.0)\n\t\t\tmult.x *= -1.0;\n\t\tif (offset.z > 0.5)\n\t\t\tmult.z *= -1.0;\n\t\telse\n\t\t\tmult.z = 0.0;\n\n\t\toffset.x += sin(t)*mult.x;\n\t\toffset.z += cos(t)*mult.z;\n\t}\n\tif (aFlipped > 0.5)\n\t\toffset.x *= -1.0;\n\n\t// Thanks to http://www.gamedev.net/topic/385785-billboard-shader/#entry3550648\n\tvec3 vR = offset.x*right;\n\tvec3 vU = offset.z*up;\n\tvec4 d = vec4(vR+vU+look*0.5, 0.0);\n\tvPosition = vWorldVertex =  uMMatrix * (vec4(aPosition, 1.0) + d);\n\n\tvWorldNormal = look;\n\tvTexture = aTexture;\n\n\tgl_Position = uPMatrix * uVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],46:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nvarying vec4 vPosition;\n\n// Via http://devmaster.net/posts/3002/shader-effects-shadow-mapping\nvec4 pack(float depth) {\n\tconst vec4 bias = vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);\n\n\tfloat r = depth;\n\tfloat g = fract(r*255.0);\n\tfloat b = fract(g*255.0);\n\tfloat a = fract(b*255.0);\n\tvec4 color = vec4(r, g, b, a);\n\n\treturn color - (color.yzww * bias);\n}\n\nvoid main(void) {\n\tfloat linearDepth = length(vPosition) * LinearDepthConstant;\n\t/*gl_FragColor = pack(linearDepth);*/\n\tgl_FragColor = vec4(1.0,0.0,1.0,1.0);\n}\n\n";
 
-},{}],47:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\n\nuniform mat4 uVMatrix;\nuniform mat4 uMMatrix;\nuniform mat4 uPMatrix;\n\nvarying vec4 vPosition;\n\nvoid main(void) {\n\tvPosition = uVMatrix * uMMatrix * vec4(aPosition + vec3(-8,-8,-8), 1.0);\n\tvPosition += vec4(0,0,-16,0);\n\tvPosition = vec4(aPosition, 1.0);\n\tgl_Position = uPMatrix * vPosition;\n}\n\n";
 
-},{}],48:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nstruct PointLight\n{\n\tfloat enabled;\n\tvec3 color;\n\tvec3 position;\n\tvec3 attenuation;\n};\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nuniform PointLight uLight[4];\nuniform sampler2D uDepthMap;\n\nuniform sampler2D uSampler; // texture coords\nuniform vec3 uAmbientColor;\n\nfloat unpack(vec4 color)\n{\n\tconst vec4 bitShifts = vec4(1.0, 1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0));\n\treturn dot(color, bitShifts);\n}\n\nvoid main(void) {\n\tvec3 normal = normalize(vWorldNormal);\n\tvec4 texColor = texture2D(uSampler, vec2(vTexture.s, vTexture.t));\n\tif (texColor.a < 0.1) // Transparent textures\n\t\tdiscard;\n\n\tvec3 color = uAmbientColor;\n\n\tfor (int i=0; i<4; i++) {\n\t\tif (uLight[i].enabled < 0.5)\n\t\t\tcontinue;\n\t\tvec3 lightVec = normalize(uLight[i].position - vWorldVertex.xyz);\n\t\tfloat l = dot(normal, lightVec);\n\n\t\tif (l <= 0.0)\n\t\t\tcontinue;\n\n\t\tfloat d = distance(vWorldVertex.xyz, uLight[i].position);\n\t\tfloat a = 1.0/(\n\t\t\tuLight[i].attenuation.x +\n\t\t\tuLight[i].attenuation.y*d + \n\t\t\tuLight[i].attenuation.z*d*d\n\t\t);\n\t\tcolor += l*a*uLight[i].color;\n\t}\n\n\t//vec3 depth = vPosition.xyz / vPosition.w;\n\t//depth.z = length(vWorldVertex.xyz - uLight[0].position) * LinearDepthConstant;\n\tfloat shadow = 1.0;\n\n\t//depth.z *= 0.96; // Offset depth \n\t//if (depth.z > unpack(texture2D(uDepthMap, depth.xy)))\n\t\t//shadow *= 0.5;\n\n\tgl_FragColor = clamp(vec4(texColor.rgb*color*shadow, texColor.a), 0.0, 1.0);\n}\n\n";
 
-},{}],49:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aTexture;\n\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\n\nuniform mat4 uLightVMatrix;\nuniform mat4 uLightPMatrix;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nvoid main(void) {\n\tvWorldVertex = uMMatrix * vec4(aPosition, 1.0);\n\tvec4 viewVertex = uVMatrix * vWorldVertex;\n\tgl_Position = uPMatrix * viewVertex;\n\n\tvTexture = aTexture;\n\tvWorldNormal = normalize(mat3(uMMatrix) * aNormal);\n\n\tvPosition = uLightPMatrix * uLightVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],50:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 var Sprite = function(pos) {
 	this.pos = pos ? pos : [0,0,0];
@@ -10632,7 +10608,7 @@ Sprite.prototype.checkCollision = function(env) {
 };
 module.exports = Sprite;
 
-},{}],51:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 'use strict';
 var Sprite = require("./sprite");
 
@@ -10746,7 +10722,7 @@ Sprites.prototype.offsetSprite = function(spriteId, d) {
 
 module.exports = Sprites;
 
-},{"./sprite":50}],52:[function(require,module,exports){
+},{"./sprite":49}],51:[function(require,module,exports){
 'use strict';
 
 /* 地形 */
@@ -10979,7 +10955,7 @@ Terrain.prototype.specialTiles = {
 };
 module.exports = Terrain;
 
-},{}],53:[function(require,module,exports){
+},{}],52:[function(require,module,exports){
 'use strict';
 var TextureAtlas = function(gl, image, tileSize) {
 	this.gl = gl;
@@ -11024,4 +11000,4 @@ TextureAtlas.prototype.getST = function(tileNum) {
 
 module.exports = TextureAtlas;
 
-},{}]},{},[40]);
+},{}]},{},[39]);
