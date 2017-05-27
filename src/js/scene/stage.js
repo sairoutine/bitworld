@@ -1,5 +1,29 @@
 'use strict';
 
+/*
+ * TODO
+ * core の new Game に option で webgl: true を渡せるようにする
+ * →終わったら、画面最大化を実装
+ * → createWebGL → core の機能に
+ * clamp 関数を適切な場所に(util?)
+ * →createData →リファクタ
+ * init 内の texture って object 別にいらないよな
+ * counter プロパティを frame_count プロパティに
+ * 各種オブジェクトのリファクタ
+  camera.js
+  data.js
+  dungeon.js
+  dungeon_convert.js
+  gl.js
+  level.js
+  point_light.js
+  programs.js
+  sprite.js
+  sprites.js
+  terrain.js
+  texture.js
+ */
+
 // utils
 Number.prototype.clamp = function(min, max) {
 	return (this < min ? min : (this > max ? max : this));
