@@ -1,31 +1,24 @@
 'use strict';
 var TextureAtlas = function(gl, image, tileSize) {
-	this.gl = gl;
 	this.tileSizePx = tileSize;
-	this.imageSizePx = 0;
-	this.tileSizeNormalized = 0;
-	this.tilesPerRow = 0;
-	this.paddingNormalized = 0;
-	this.texture = null;
 
-	var texture = this.gl.createTexture();
-
-	this.handleTexture(image, texture);
-};
-
-TextureAtlas.prototype.handleTexture = function(image, texture) {
-	this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-	this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, image);
-	this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-	this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-	this.gl.bindTexture(this.gl.TEXTURE_2D, null);
-
-	this.texture = texture;
 	this.imageSizePx = image.width; // width must equal height
 
 	this.tileSizeNormalized = this.tileSizePx/this.imageSizePx;
 	this.paddingNormalized = 0.5/this.imageSizePx;
 	this.tilesPerRow = Math.floor(this.imageSizePx/this.tileSizePx);
+
+	// image を texture に紐付け
+	this.texture = gl.createTexture();
+	this.handleTexture(gl, image, this.texture);
+};
+
+TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
+	gl.bindTexture(gl.TEXTURE_2D, texture);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	gl.bindTexture(gl.TEXTURE_2D, null);
 };
 
 /** Based on tile number, get the s and t coordinate ranges of the tile.
