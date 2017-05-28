@@ -5,18 +5,18 @@
  * 右クリックカメラ移動や、ズーム対応
  * createData →リファクタ
  * 各種オブジェクトのリファクタ
-  camera.js
-  data.js
-  dungeon.js
-  dungeon_convert.js
-  gl.js
-  level.js
-  point_light.js
-  programs.js
   sprite.js
   sprites.js
   terrain.js
-  texture.js
+  camera.js
+  point_light.js
+  programs.js
+  data.js
+  level.js
+  dungeon.js
+  dungeon_convert.js
+  * WebGL API の調査
+  * シェーダーの調査
   scene/stage.js
  */
 

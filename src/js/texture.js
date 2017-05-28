@@ -1,12 +1,14 @@
 'use strict';
-var TextureAtlas = function(gl, image, tileSize) {
-	this.tileSizePx = tileSize;
 
+// gl: WebGLContext オブジェクト
+// image: Image オブジェクト
+// tilesizepx: 1キャラの px サイズ
+var TextureAtlas = function(gl, image, tileSizePx) {
 	this.imageSizePx = image.width; // width must equal height
 
-	this.tileSizeNormalized = this.tileSizePx/this.imageSizePx;
+	this.tileSizeNormalized = tileSizePx/this.imageSizePx;
 	this.paddingNormalized = 0.5/this.imageSizePx;
-	this.tilesPerRow = Math.floor(this.imageSizePx/this.tileSizePx);
+	this.tilesPerRow = Math.floor(this.imageSizePx/tileSizePx);
 
 	// image を texture に紐付け
 	this.texture = gl.createTexture();
@@ -23,6 +25,8 @@ TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
 
 /** Based on tile number, get the s and t coordinate ranges of the tile.
 	returns array of format [s1,t1,s2,t2] */
+/* テクスチャ画像のどこからどこまでを切り取るか。
+ * 座標は小数点 */
 TextureAtlas.prototype.getST = function(tileNum) {
 	var stRange = [
 		this.tileSizeNormalized * (tileNum % this.tilesPerRow) + this.paddingNormalized,
@@ -30,6 +34,7 @@ TextureAtlas.prototype.getST = function(tileNum) {
 	];
 	stRange[2] = stRange[0] + this.tileSizeNormalized - this.paddingNormalized*1.5;
 	stRange[3] = stRange[1] + this.tileSizeNormalized - this.paddingNormalized*1.5;
+	console.log(stRange);
 	return stRange;
 };
 
