@@ -34,7 +34,6 @@ TextureAtlas.prototype.getST = function(tileNum) {
 	];
 	stRange[2] = stRange[0] + this.tileSizeNormalized - this.paddingNormalized*1.5;
 	stRange[3] = stRange[1] + this.tileSizeNormalized - this.paddingNormalized*1.5;
-	console.log(stRange);
 	return stRange;
 };
 
