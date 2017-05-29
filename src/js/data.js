@@ -8,8 +8,9 @@ var CreateData = function(gl){
 		setLightUniforms(gl, data.world);
 		setLightUniforms(gl, data.sprites);
 
+		// 背景色
 		//data.background = [0.5, 0.5, 0.5, 1.0];
-		data.background = [0, 0, 0, 1];
+		data.background = [0, 0, 0, 1]; // 黒
 		data.rotateSpeed = 0.01;
 		data.zoomFactor = 0.01;
 

@@ -3,11 +3,19 @@
 /*
  * TODO
  * 右クリックカメラ移動や、ズーム対応
+ * createData 読む
+ * draw 読む
+ * dungeon 周り読む
+ * WebGL API の調査
+ * シェーダーの調査
+ * テクスチャの貼り付け方
+ * 設計方針固める
+
  * createData →リファクタ
  * 各種オブジェクトのリファクタ
+  terrain.js
   sprite.js
   sprites.js
-  terrain.js
   camera.js
   point_light.js
   programs.js
@@ -15,8 +23,6 @@
   level.js
   dungeon.js
   dungeon_convert.js
-  * WebGL API の調査
-  * シェーダーの調査
   scene/stage.js
  */
 
@@ -66,8 +72,8 @@ SceneLoading.prototype.init = function() {
 
 	// ライト一覧
 	this.lights = [];
-	// (恐らく)スタート地点のライト
-	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
+	// ステージ全体のライト
+	this.lights[0] = new PointLight([2.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
 	this.sprites = new Sprites(this.core.gl, sprites);
@@ -89,11 +95,13 @@ SceneLoading.prototype.goToLevel = function(l) {
 	this.level = Level.getLevel(l);
 	this.dungeonObj = new DungeonConvert(this.level);
 
-	// ゴールを照らすライト
+	// スタート地点を照らすライト
 	this.lights[1] = new PointLight([1.0, 0.5, 0.0], centerXY(this.dungeonObj.upstairs), [0.2, 0.1, 0.05]);
 	this.terrain.generate(this.dungeonObj.cubes);
 
+	// キャラのポジション設定
 	this.player.pos = centerXY(this.dungeonObj.upstairs);
+	// キャラについてくるやつのポジション設定
 	this.sprites.sprites[1].pos = centerXY(this.dungeonObj.upstairs);
 	this.sprites.update();
 };

@@ -1,17 +1,24 @@
 'use strict';
+
+/* 自分と自分についてくるキャラ */
+
 var Sprite = require("./sprite");
 
 var Sprites = function(gl, textureAtlas) {
 	this.gl = gl;
 	this.textureAtlas = textureAtlas;
 	this.sprites = [];
+
 	this.vertices = [];
-	this.offsets = [];
 	this.texCoords = [];
+	this.offsets = [];
 	this.indices = [];
 	this.moving = [];
 	this.flipped = [];
+
 	this.baseIndex = 0;
+
+	// WebGL が使うオブジェクト
 	this.vertexObject = gl.createBuffer();
 	this.texCoordObject = gl.createBuffer();
 	this.offsetObject = gl.createBuffer();

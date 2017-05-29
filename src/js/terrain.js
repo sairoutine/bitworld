@@ -16,7 +16,11 @@ var Terrain = function(gl, textureAtlas) {
 	this.texCoordObject = null;
 	this.indexObject = null;
 };
+
+// verticle index の数
 Terrain.prototype.numVertices = function() { return this.indices.length; };
+
+// 衝突判定
 Terrain.prototype.collision = function(x,y,z) {
 	if (x instanceof Array) {
 		z = x[2];
@@ -35,6 +39,7 @@ Terrain.prototype.collision = function(x,y,z) {
 	return this.cubes[z][y][x];
 };
 
+// 地形を構築するブロックをすべて生成
 Terrain.prototype.generate = function(world) {
 	this.cubes = world;
 	this.vertices = [];

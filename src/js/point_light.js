@@ -8,6 +8,7 @@ var PointLight = function(color, position, attenuation, enabled) {
 	this.frame = 0;
 };
 PointLight.prototype.update = function() {
+	// ライトの光を時間に応じて拡縮
 	for (var i=0; i<3; i++) 
 		this.color[i] += Math.sin(0.0005*this.frame*180/Math.PI)*0.002;
 
