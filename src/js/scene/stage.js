@@ -2,7 +2,6 @@
 
 /*
  * TODO
- * 右クリックカメラ移動や、ズーム対応
  * createData 読む
  * draw 読む
  * dungeon 周り読む
@@ -253,17 +252,20 @@ SceneLoading.prototype.handleInputs = function() {
 		this.player.flipped = 0;
 		this.player.turnAndMove(this.terrain,-Math.PI/2);
 	}
-	/*
-			if (input.rightClick) {
-				var angleChange = [-input.mouseMove[1]*this.data.rotateSpeed, 0, input.mouseMove[0]*this.data.rotateSpeed];
-				this.camera.changeAngle(angleChange);
-			}
 
-			input.mouseMove = [0,0];
-			if (input.scroll) {
-				this.camera.changeDistance(input.scroll);
-				input.scroll = 0;
-			}
-	*/
+	// カメラ移動
+	if (this.core.isRightClickDown()) {
+		var angleChange = [
+			-this.core.mouseMoveY() * this.data.rotateSpeed,
+			0,
+			this.core.mouseMoveX() * this.data.rotateSpeed
+		];
+		this.camera.changeAngle(angleChange);
+	}
+
+	// ズーム
+	if (this.core.mouseScroll()) {
+		this.camera.changeDistance(this.core.mouseScroll());
+	}
 };
 module.exports = SceneLoading;
