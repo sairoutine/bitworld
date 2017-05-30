@@ -133,7 +133,9 @@ SceneLoading.prototype.draw = function(){
 	this.lights[0].position = this.player.pos.slice(0);
 	this.lights[0].position[2] += 2; // ライトのZ 軸を少し上に
 
+	// ついてくるキャラを、プレイヤーの方に向けて動かす
 	this.sprites.sprites[1].moveToward(this.terrain, this.player.pos);
+
 	this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
 	this.camera.updateMatrix(this.terrain.cubes);
 
