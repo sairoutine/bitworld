@@ -257,7 +257,7 @@ SceneLoading.prototype.handleInputs = function() {
 	}
 
 	// カメラ移動
-	if (this.core.isRightClickDown()) {
+	if (this.core.isLeftClickDown()) {
 		var angleChange = [
 			-this.core.mouseMoveY() * this.data.rotateSpeed,
 			0,
