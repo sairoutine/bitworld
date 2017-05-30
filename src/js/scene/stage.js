@@ -44,7 +44,7 @@ var Level = require('../level');
 var PointLight = require('../point_light');
 var Sprites = require('../sprites');
 var DungeonConvert = require('../dungeon_convert');
-var createData = require('../data');
+var createData = require('../programs');
 var glmat = require('gl-matrix');
 
 var SceneLoading = function(core) {
@@ -55,7 +55,10 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
+	// create and enable shaders
 	this.data = createData(this.core.gl);
+	this.core.gl.enable(this.core.gl.DEPTH_TEST);
+	this.core.gl.useProgram(this.data.world.program);
 
 	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
