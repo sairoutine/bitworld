@@ -1,5 +1,10 @@
 'use strict';
 
+// [x, y, z]
+// x: 画面右
+// y: 画面奥
+// x: 画面上
+
 /*
  * TODO
  * draw 読む
@@ -73,7 +78,7 @@ SceneLoading.prototype.init = function() {
 
 	// ライト一覧
 	this.lights = [];
-	// ステージ全体のライト
+	// プレイヤーを照らすライト
 	this.lights[0] = new PointLight([2.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
@@ -124,8 +129,10 @@ SceneLoading.prototype.draw = function(){
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
 
 
+	// ライトはプレイヤーの今いる位置を照らす
 	this.lights[0].position = this.player.pos.slice(0);
-	this.lights[0].position[2] += 2;
+	this.lights[0].position[2] += 2; // ライトのZ 軸を少し上に
+
 	this.sprites.sprites[1].moveToward(this.terrain, this.player.pos);
 	this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
 	this.camera.updateMatrix(this.terrain.cubes);
