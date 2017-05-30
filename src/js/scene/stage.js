@@ -2,7 +2,6 @@
 
 /*
  * TODO
- * createData 読む
  * draw 読む
  * dungeon 周り読む
  * WebGL API の調査
@@ -10,7 +9,6 @@
  * テクスチャの貼り付け方
  * 設計方針固める
 
- * createData →リファクタ
  * 各種オブジェクトのリファクタ
   terrain.js
   sprite.js
@@ -23,6 +21,7 @@
   dungeon.js
   dungeon_convert.js
   scene/stage.js
+ * programs →リファクタ
  */
 
 // utils
@@ -113,16 +112,17 @@ SceneLoading.prototype.goToLevel = function(l) {
 SceneLoading.prototype.beforeDraw = function() {
 	base_scene.prototype.beforeDraw.apply(this, arguments);
 
+	// 入力に応じて操作
+	this.handleInputs();
 };
 SceneLoading.prototype.draw = function(){
+	// 画面をクリア
 	this.core.gl.clearColor.apply(this,this.data.background);
 	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT);
 
 	this.core.gl.viewport(0, 0, this.core.width, this.core.height);
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
 
-	this.handleInputs();
-	//handleInputs();
 
 	this.lights[0].position = this.player.pos.slice(0);
 	this.lights[0].position[2] += 2;
