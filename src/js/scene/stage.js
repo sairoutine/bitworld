@@ -7,7 +7,6 @@
 
 /*
  * TODO
- * draw 読む
  * dungeon 周り読む
  * WebGL API の調査
  * シェーダーの調査
@@ -62,7 +61,7 @@ SceneLoading.prototype.init = function() {
 	// create and enable shaders
 	this.data = createData(this.core.gl);
 	this.core.gl.enable(this.core.gl.DEPTH_TEST);
-	this.core.gl.useProgram(this.data.world.program);
+	//this.core.gl.useProgram(this.data.world.program); // 二重に使ってしまってるので不要なのでコメントアウト
 
 	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
