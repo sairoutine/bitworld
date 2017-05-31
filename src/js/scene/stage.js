@@ -225,11 +225,14 @@ SceneLoading.prototype.renderSprites = function() {
 
 SceneLoading.prototype.checkStairs = function() {
 	var cubePos = [0,0,0];
-	for (var i=0; i<3; i++)
-		cubePos[i] = Math.floor(this.sprites.sprites[1].pos[i]);
-	if (cubePos[0] == this.dungeonObj.downstairs[0] && 
-		cubePos[1] == this.dungeonObj.downstairs[1]) {
-		this.goToLevel(++this.levelNum);
+	for (var i=0; i<3; i++) {
+		cubePos[i] = Math.floor(this.sprites.sprites[1].pos[i]); // プレイヤーについてくるやつの位置
+	}
+
+	// プレイヤーについてくるやつと、ゴールのコリジョン判定
+	if (cubePos[0] === this.dungeonObj.downstairs[0] && 
+		cubePos[1] === this.dungeonObj.downstairs[1]) {
+		this.goToLevel(++this.levelNum); // 次のステージへ
 	}
 };
 
