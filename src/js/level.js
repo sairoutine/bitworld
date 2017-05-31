@@ -20,6 +20,7 @@ var levels = [
 ];
 
 Level.getLevel = function(l) {
-	return levels[Math.min(Math.floor(l/2),levels.length-1)];
+	// 2レベル毎にステージ移動
+	return levels[Math.min(Math.floor(l/2), levels.length-1)];
 };
 module.exports = Level;

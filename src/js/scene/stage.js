@@ -73,7 +73,7 @@ SceneLoading.prototype.init = function() {
 
 	// レベル
 	this.levelNum = 0; // 1~8
-	this.level = Level.getLevel(this.levelNum); // TODO: gotolevel 内でやっているので不要では
+	this.level = null;
 
 	// ライト一覧
 	this.lights = [];
