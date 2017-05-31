@@ -10468,7 +10468,7 @@ SceneLoading.prototype.init = function() {
 	// ライト一覧
 	this.lights = [];
 	// プレイヤーを照らすライト
-	this.lights[0] = new PointLight([2.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
+	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
 	this.sprites = new Sprites(this.core.gl, sprites);
