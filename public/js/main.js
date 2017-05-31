@@ -7004,7 +7004,7 @@ Camera.prototype.updateMatrix = function(env) {
 
 module.exports = Camera;
 
-},{"./hakurei":22,"gl-matrix":2}],16:[function(require,module,exports){
+},{"./hakurei":21,"gl-matrix":2}],16:[function(require,module,exports){
 'use strict';
 var DEBUG = require("./debug_constant");
 
@@ -7017,41 +7017,7 @@ if (DEBUG.ON) {
 }
 module.exports = CONSTANT;
 
-},{"./debug_constant":18}],17:[function(require,module,exports){
-'use strict';
-var programs = require("./programs");
-var PointLight = require("./point_light");
-var CreateData = function(gl){
-		var data = programs(gl);
-
-		// Uniform array of PointLight structs in GLSL
-		setLightUniforms(gl, data.world);
-		setLightUniforms(gl, data.sprites);
-
-		//data.background = [0.5, 0.5, 0.5, 1.0];
-		data.background = [0, 0, 0, 1];
-		data.rotateSpeed = 0.01;
-		data.zoomFactor = 0.01;
-
-		gl.enable(gl.DEPTH_TEST);
-
-		gl.useProgram(data.world.program);
-		return data;
-};
-function setLightUniforms(gl, prog) {
-	// Uniform array of PointLight structs in GLSL
-	prog.u.Light = [];
-	for (var i=0; i<4; i++) {
-		var l = prog.u.Light;
-		l[i] = {};
-		for (var key in new PointLight()) {
-			l[i][key] = gl.getUniformLocation(prog.program, "uLight["+i+"]."+key);
-		}
-	}
-}
-module.exports = CreateData;
-
-},{"./point_light":40,"./programs":41}],18:[function(require,module,exports){
+},{"./debug_constant":17}],17:[function(require,module,exports){
 'use strict';
 var DEBUG = {
 	ON: true,
@@ -7061,7 +7027,7 @@ var DEBUG = {
 
 module.exports = DEBUG;
 
-},{}],19:[function(require,module,exports){
+},{}],18:[function(require,module,exports){
 'use strict';
 var randInt = function(min,max) {
 	if (max == null) {
@@ -7336,7 +7302,7 @@ var Dungeon = function(tileDim, roomDim, roomMinSize) {
 
 module.exports = Dungeon;
 
-},{}],20:[function(require,module,exports){
+},{}],19:[function(require,module,exports){
 'use strict';
 var Dungeon = require("./dungeon");
 
@@ -7406,7 +7372,7 @@ var DungeonConvert = function(level) {
 };
 module.exports = DungeonConvert;
 
-},{"./dungeon":19}],21:[function(require,module,exports){
+},{"./dungeon":18}],20:[function(require,module,exports){
 'use strict';
 var core = require('./hakurei').core;
 var util = require('./hakurei').util;
@@ -7443,12 +7409,12 @@ Game.prototype.stopBGM = function () {
 
 module.exports = Game;
 
-},{"./constant":16,"./hakurei":22,"./scene/loading":42,"./scene/stage":43}],22:[function(require,module,exports){
+},{"./constant":16,"./hakurei":21,"./scene/loading":41,"./scene/stage":42}],21:[function(require,module,exports){
 'use strict';
 
 module.exports = require("./hakureijs/index");
 
-},{"./hakureijs/index":28}],23:[function(require,module,exports){
+},{"./hakureijs/index":27}],22:[function(require,module,exports){
 'use strict';
 
 var AudioLoader = function() {
@@ -7622,7 +7588,7 @@ AudioLoader.prototype.progress = function() {
 
 module.exports = AudioLoader;
 
-},{}],24:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 'use strict';
 
 var FontLoader = function() {
@@ -7648,7 +7614,7 @@ FontLoader.prototype.progress = function() {
 
 module.exports = FontLoader;
 
-},{}],25:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 'use strict';
 
 var ImageLoader = function() {
@@ -7702,7 +7668,7 @@ ImageLoader.prototype.progress = function() {
 
 module.exports = ImageLoader;
 
-},{}],26:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 'use strict';
 
 var Constant = {
@@ -7718,8 +7684,11 @@ var Constant = {
 
 module.exports = Constant;
 
-},{}],27:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 'use strict';
+
+/* TODO: create input_manager class */
+
 var WebGLDebugUtils = require("webgl-debug");
 var CONSTANT = require("./constant");
 var ImageLoader = require("./asset_loader/image");
@@ -7756,6 +7725,16 @@ var Core = function(canvas, options) {
 	this.current_keyflag = 0x0;
 	this.before_keyflag = 0x0;
 
+	this.is_left_clicked  = false;
+	this.is_right_clicked = false;
+	this.before_is_left_clicked  = false;
+	this.before_is_right_clicked = false;
+	this.mouse_change_x = 0;
+	this.mouse_change_y = 0;
+	this.mouse_x = 0;
+	this.mouse_y = 0;
+	this.mouse_scroll = 0;
+
 	this.is_connect_gamepad = false;
 
 	this.image_loader = new ImageLoader();
@@ -7772,6 +7751,18 @@ Core.prototype.init = function () {
 
 	this.current_keyflag = 0x0;
 	this.before_keyflag = 0x0;
+
+	this.is_left_clicked  = false;
+	this.is_right_clicked = false;
+	this.before_is_left_clicked  = false;
+	this.before_is_right_clicked = false;
+	this.mouse_change_x = 0;
+	this.mouse_change_y = 0;
+	this.mouse_x = 0;
+	this.mouse_y = 0;
+	this.mouse_scroll = 0;
+
+
 
 	this.image_loader.init();
 };
@@ -7820,6 +7811,14 @@ Core.prototype.run = function(){
 
 	// save key current pressed keys
 	this.before_keyflag = this.current_keyflag;
+	this.before_is_left_clicked = this.is_left_clicked;
+	this.before_is_right_clicked = this.is_right_clicked;
+
+	// reset mouse wheel and mouse move
+	this.mouse_scroll = 0;
+	this.mouse_change_x = 0;
+	this.mouse_change_y = 0;
+
 
 	this.frame_count++;
 
@@ -7882,6 +7881,71 @@ Core.prototype.isKeyPush = function(flag) {
 	// not true if key is pressed in previous frame
 	return !(this.before_keyflag & flag) && this.current_keyflag & flag;
 };
+Core.prototype.handleMouseDown = function(event) {
+	if ("which" in event) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+		this.is_left_clicked  = event.which === 1;
+		this.is_right_clicked = event.which === 3;
+	}
+	else if ("button" in event) {  // IE, Opera
+		this.is_left_clicked  = event.button === 1;
+		this.is_right_clicked = event.button === 2;
+	}
+	event.preventDefault();
+};
+Core.prototype.handleMouseUp = function(event) {
+	if ("which" in event) { // Gecko (Firefox), WebKit (Safari/Chrome) & Opera
+		this.is_left_clicked  = event.which === 1 ? false : this.is_left_clicked;
+		this.is_right_clicked = event.which === 3 ? false : this.is_right_clicked;
+	}
+	else if ("button" in event) {  // IE, Opera
+		this.is_left_clicked  = event.button === 1 ? false : this.is_left_clicked;
+		this.is_right_clicked = event.button === 2 ? false : this.is_right_clicked;
+	}
+	event.preventDefault();
+};
+Core.prototype.isLeftClickDown = function() {
+	return this.is_left_clicked;
+};
+Core.prototype.isLeftClickPush = function() {
+	// not true if is pressed in previous frame
+	return this.is_left_clicked && !this.before_is_left_clicked;
+};
+Core.prototype.isRightClickDown = function() {
+	return this.is_right_clicked;
+};
+Core.prototype.isRightClickPush = function() {
+	// not true if is pressed in previous frame
+	return this.is_right_clicked && !this.before_is_right_clicked;
+};
+
+
+Core.prototype.handleMouseMove = function (d) {
+	d = d ? d : window.event;
+	d.preventDefault();
+	this.mouse_change_x = this.mouse_x - d.clientX;
+	this.mouse_change_y = this.mouse_y - d.clientY;
+	this.mouse_x = d.clientX;
+	this.mouse_y = d.clientY;
+};
+Core.prototype.mousePositionX = function () {
+	return this.mouse_x;
+};
+Core.prototype.mousePositionY = function () {
+	return this.mouse_y;
+};
+Core.prototype.mouseMoveX = function () {
+	return this.mouse_change_x;
+};
+Core.prototype.mouseMoveY = function () {
+	return this.mouse_change_y;
+};
+Core.prototype.handleMouseWheel = function (event) {
+	this.mouse_scroll = event.detail ? event.detail : -event.wheelDelta/120;
+};
+Core.prototype.mouseScroll = function () {
+	return this.mouse_scroll;
+};
+
 Core.prototype._keyCodeToBitCode = function(keyCode) {
 	var flag;
 	switch(keyCode) {
@@ -7988,6 +8052,25 @@ Core.prototype.setupEvents = function() {
 	window.onkeydown = function(e) { self.handleKeyDown(e); };
 	window.onkeyup   = function(e) { self.handleKeyUp(e); };
 
+	// bind mouse click
+	this.canvas_dom.onmousedown = function(e) { self.handleMouseDown(e); };
+	this.canvas_dom.onmouseup   = function(e) { self.handleMouseUp(e); };
+
+	// bind mouse move
+	this.canvas_dom.onmousemove = function(d) { self.handleMouseMove(d); };
+
+	// bind mouse wheel
+	var mousewheelevent=(window.navi && /Firefox/i.test(window.navigator.userAgent)) ? "DOMMouseScroll" : "mousewheel";
+	if (this.canvas_dom.addEventListener) { //WC3 browsers
+		this.canvas_dom.addEventListener(mousewheelevent, function(e) {
+			var event = window.event || e;
+			self.handleMouseWheel(event);
+		}, false);
+	}
+
+	// unable to use right click menu.
+	this.canvas_dom.oncontextmenu = function() { return false; };
+
 	// bind gamepad
 	if(window.Gamepad && window.navigator && window.navigator.getGamepads) {
 		self.enableGamePad();
@@ -8016,7 +8099,7 @@ Core.prototype.createWebGLContext = function(canvas) {
 
 module.exports = Core;
 
-},{"./asset_loader/audio":23,"./asset_loader/font":24,"./asset_loader/image":25,"./constant":26,"webgl-debug":29}],28:[function(require,module,exports){
+},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25,"webgl-debug":28}],27:[function(require,module,exports){
 'use strict';
 module.exports = {
 	util: require("./util"),
@@ -8043,7 +8126,7 @@ module.exports = {
 
 };
 
-},{"./asset_loader/audio":23,"./asset_loader/font":24,"./asset_loader/image":25,"./constant":26,"./core":27,"./object/base":30,"./object/pool_manager":31,"./object/sprite":32,"./scene/base":33,"./serif_manager":34,"./storage/base":35,"./storage/save":36,"./util":37}],29:[function(require,module,exports){
+},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25,"./core":26,"./object/base":29,"./object/pool_manager":30,"./object/sprite":31,"./scene/base":32,"./serif_manager":33,"./storage/base":34,"./storage/save":35,"./util":36}],28:[function(require,module,exports){
 (function (global){
 /*
 ** Copyright (c) 2012 The Khronos Group Inc.
@@ -9001,7 +9084,7 @@ return {
 module.exports = WebGLDebugUtils;
 
 }).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-},{}],30:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 'use strict';
 
 var util = require('../util');
@@ -9225,7 +9308,7 @@ ObjectBase.prototype.setVelocity = function(velocity) {
 module.exports = ObjectBase;
 
 
-},{"../util":37}],31:[function(require,module,exports){
+},{"../util":36}],30:[function(require,module,exports){
 'use strict';
 
 // TODO: add pooling logic
@@ -9312,7 +9395,7 @@ PoolManager.prototype.checkCollisionWithManager = function(manager) {
 
 module.exports = PoolManager;
 
-},{"../util":37,"./base":30}],32:[function(require,module,exports){
+},{"../util":36,"./base":29}],31:[function(require,module,exports){
 'use strict';
 var base_object = require('./base');
 var util = require('../util');
@@ -9450,7 +9533,7 @@ Sprite.prototype.isReflect = function(){
 
 module.exports = Sprite;
 
-},{"../util":37,"./base":30}],33:[function(require,module,exports){
+},{"../util":36,"./base":29}],32:[function(require,module,exports){
 'use strict';
 
 var SceneBase = function(core, scene) {
@@ -9557,7 +9640,7 @@ SceneBase.prototype.y = function(val) {
 module.exports = SceneBase;
 
 
-},{}],34:[function(require,module,exports){
+},{}],33:[function(require,module,exports){
 'use strict';
 
 var SerifManager = function () {
@@ -9711,7 +9794,7 @@ SerifManager.prototype.lines = function () {
 
 module.exports = SerifManager;
 
-},{}],35:[function(require,module,exports){
+},{}],34:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9875,7 +9958,7 @@ StorageBase.prototype._removeWebStorage = function() {
 module.exports = StorageBase;
 
 }).call(this,require('_process'))
-},{"_process":13,"fs":1,"path":12}],36:[function(require,module,exports){
+},{"_process":13,"fs":1,"path":12}],35:[function(require,module,exports){
 'use strict';
 var base_class = require('./base');
 var util = require('../util');
@@ -9897,7 +9980,7 @@ StorageSave.KEY = function(){
 
 module.exports = StorageSave;
 
-},{"../util":37,"./base":35}],37:[function(require,module,exports){
+},{"../util":36,"./base":34}],36:[function(require,module,exports){
 'use strict';
 var Util = {
 	inherit: function( child, parent ) {
@@ -9944,7 +10027,7 @@ var Util = {
 
 module.exports = Util;
 
-},{}],38:[function(require,module,exports){
+},{}],37:[function(require,module,exports){
 'use strict';
 var Level = function(ambient,floorTiles,wallTiles,tileDim,roomDim,roomMinSize) {
 	this.tileDim = tileDim;
@@ -9971,7 +10054,7 @@ Level.getLevel = function(l) {
 };
 module.exports = Level;
 
-},{}],39:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
 var Game = require('./game');
 
@@ -10016,7 +10099,7 @@ window.changeFullScreen = function () {
 	game.fullscreen();
 };
 
-},{"./game":21}],40:[function(require,module,exports){
+},{"./game":20}],39:[function(require,module,exports){
 'use strict';
 var PointLight = function(color, position, attenuation, enabled) {
 	this.color = color ? color : [1.0, 1.0, 1.0];
@@ -10027,6 +10110,7 @@ var PointLight = function(color, position, attenuation, enabled) {
 	this.frame = 0;
 };
 PointLight.prototype.update = function() {
+	// ライトの光を時間に応じて拡縮
 	for (var i=0; i<3; i++) 
 		this.color[i] += Math.sin(0.0005*this.frame*180/Math.PI)*0.002;
 
@@ -10034,9 +10118,10 @@ PointLight.prototype.update = function() {
 };
 module.exports = PointLight;
 
-},{}],41:[function(require,module,exports){
+},{}],40:[function(require,module,exports){
 'use strict';
 var glmat = require("gl-matrix");
+var PointLight = require("./point_light");
 var worldV = require("./shader/world.vs");
 var worldF = require("./shader/world.fs");
 var billboardV = require("./shader/billboard.vs");
@@ -10174,9 +10259,39 @@ var programs = function (gl) {
 		)
 	};
 };
-module.exports = programs;
 
-},{"./shader/billboard.vs":44,"./shader/depth.fs":45,"./shader/depth.vs":46,"./shader/world.fs":47,"./shader/world.vs":48,"gl-matrix":2}],42:[function(require,module,exports){
+
+var CreateData = function(gl){
+		var data = programs(gl);
+
+		// Uniform array of PointLight structs in GLSL
+		setLightUniforms(gl, data.world);
+		setLightUniforms(gl, data.sprites);
+
+		// 背景色
+		//data.background = [0.5, 0.5, 0.5, 1.0];
+		data.background = [0, 0, 0, 1]; // 黒
+		data.rotateSpeed = 0.01;
+		data.zoomFactor = 0.01;
+		return data;
+};
+function setLightUniforms(gl, prog) {
+	// Uniform array of PointLight structs in GLSL
+	prog.u.Light = [];
+	for (var i=0; i<4; i++) {
+		var l = prog.u.Light;
+		l[i] = {};
+		for (var key in new PointLight()) {
+			l[i][key] = gl.getUniformLocation(prog.program, "uLight["+i+"]."+key);
+		}
+	}
+}
+
+
+
+module.exports = CreateData;
+
+},{"./point_light":39,"./shader/billboard.vs":43,"./shader/depth.fs":44,"./shader/depth.vs":45,"./shader/world.fs":46,"./shader/world.vs":47,"gl-matrix":2}],41:[function(require,module,exports){
 'use strict';
 
 // ローディングシーン
@@ -10272,27 +10387,35 @@ SceneLoading.prototype.progress = function(){
 
 module.exports = SceneLoading;
 
-},{"../assets_config":14,"../hakurei":22}],43:[function(require,module,exports){
+},{"../assets_config":14,"../hakurei":21}],42:[function(require,module,exports){
 'use strict';
+
+// [x, y, z]
+// x: 画面右
+// y: 画面奥
+// x: 画面上
 
 /*
  * TODO
- * 右クリックカメラ移動や、ズーム対応
- * createData →リファクタ
+ * dungeon 周り読む
+ * WebGL API の調査
+ * シェーダーの調査
+ * テクスチャの貼り付け方
+ * 設計方針固める
+
  * 各種オブジェクトのリファクタ
-  camera.js
-  data.js
-  dungeon.js
-  dungeon_convert.js
-  gl.js
-  level.js
-  point_light.js
-  programs.js
+  terrain.js
   sprite.js
   sprites.js
-  terrain.js
-  texture.js
+  camera.js
+  point_light.js
+  programs.js
+  data.js
+  level.js
+  dungeon.js
+  dungeon_convert.js
   scene/stage.js
+ * programs →リファクタ
  */
 
 // utils
@@ -10314,7 +10437,7 @@ var Level = require('../level');
 var PointLight = require('../point_light');
 var Sprites = require('../sprites');
 var DungeonConvert = require('../dungeon_convert');
-var createData = require('../data');
+var createData = require('../programs');
 var glmat = require('gl-matrix');
 
 var SceneLoading = function(core) {
@@ -10325,7 +10448,10 @@ util.inherit(SceneLoading, base_scene);
 SceneLoading.prototype.init = function() {
 	base_scene.prototype.init.apply(this, arguments);
 
+	// create and enable shaders
 	this.data = createData(this.core.gl);
+	this.core.gl.enable(this.core.gl.DEPTH_TEST);
+	//this.core.gl.useProgram(this.data.world.program); // 二重に使ってしまってるので不要なのでコメントアウト
 
 	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
@@ -10341,8 +10467,8 @@ SceneLoading.prototype.init = function() {
 
 	// ライト一覧
 	this.lights = [];
-	// (恐らく)スタート地点のライト
-	this.lights[0] = new PointLight([1.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
+	// プレイヤーを照らすライト
+	this.lights[0] = new PointLight([2.0, 0.5, 0.0], [0,0,1], [0.3, 0.1, 0.05]);
 
 
 	this.sprites = new Sprites(this.core.gl, sprites);
@@ -10364,11 +10490,13 @@ SceneLoading.prototype.goToLevel = function(l) {
 	this.level = Level.getLevel(l);
 	this.dungeonObj = new DungeonConvert(this.level);
 
-	// ゴールを照らすライト
+	// スタート地点を照らすライト
 	this.lights[1] = new PointLight([1.0, 0.5, 0.0], centerXY(this.dungeonObj.upstairs), [0.2, 0.1, 0.05]);
 	this.terrain.generate(this.dungeonObj.cubes);
 
+	// キャラのポジション設定
 	this.player.pos = centerXY(this.dungeonObj.upstairs);
+	// キャラについてくるやつのポジション設定
 	this.sprites.sprites[1].pos = centerXY(this.dungeonObj.upstairs);
 	this.sprites.update();
 };
@@ -10378,20 +10506,25 @@ SceneLoading.prototype.goToLevel = function(l) {
 SceneLoading.prototype.beforeDraw = function() {
 	base_scene.prototype.beforeDraw.apply(this, arguments);
 
+	// 入力に応じて操作
+	this.handleInputs();
 };
 SceneLoading.prototype.draw = function(){
+	// 画面をクリア
 	this.core.gl.clearColor.apply(this,this.data.background);
 	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT);
 
 	this.core.gl.viewport(0, 0, this.core.width, this.core.height);
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
 
-	this.handleInputs();
-	//handleInputs();
 
+	// ライトはプレイヤーの今いる位置を照らす
 	this.lights[0].position = this.player.pos.slice(0);
-	this.lights[0].position[2] += 2;
+	this.lights[0].position[2] += 2; // ライトのZ 軸を少し上に
+
+	// ついてくるキャラを、プレイヤーの方に向けて動かす
 	this.sprites.sprites[1].moveToward(this.terrain, this.player.pos);
+
 	this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
 	this.camera.updateMatrix(this.terrain.cubes);
 
@@ -10481,11 +10614,14 @@ SceneLoading.prototype.renderSprites = function() {
 
 SceneLoading.prototype.checkStairs = function() {
 	var cubePos = [0,0,0];
-	for (var i=0; i<3; i++)
-		cubePos[i] = Math.floor(this.sprites.sprites[1].pos[i]);
-	if (cubePos[0] == this.dungeonObj.downstairs[0] && 
-		cubePos[1] == this.dungeonObj.downstairs[1]) {
-		this.goToLevel(++this.levelNum);
+	for (var i=0; i<3; i++) {
+		cubePos[i] = Math.floor(this.sprites.sprites[1].pos[i]); // プレイヤーについてくるやつの位置
+	}
+
+	// プレイヤーについてくるやつと、ゴールのコリジョン判定
+	if (cubePos[0] === this.dungeonObj.downstairs[0] && 
+		cubePos[1] === this.dungeonObj.downstairs[1]) {
+		this.goToLevel(++this.levelNum); // 次のステージへ
 	}
 };
 
@@ -10520,37 +10656,40 @@ SceneLoading.prototype.handleInputs = function() {
 		this.player.flipped = 0;
 		this.player.turnAndMove(this.terrain,-Math.PI/2);
 	}
-	/*
-			if (input.rightClick) {
-				var angleChange = [-input.mouseMove[1]*this.data.rotateSpeed, 0, input.mouseMove[0]*this.data.rotateSpeed];
-				this.camera.changeAngle(angleChange);
-			}
 
-			input.mouseMove = [0,0];
-			if (input.scroll) {
-				this.camera.changeDistance(input.scroll);
-				input.scroll = 0;
-			}
-	*/
+	// カメラ移動
+	if (this.core.isLeftClickDown()) {
+		var angleChange = [
+			-this.core.mouseMoveY() * this.data.rotateSpeed,
+			0,
+			this.core.mouseMoveX() * this.data.rotateSpeed
+		];
+		this.camera.changeAngle(angleChange);
+	}
+
+	// ズーム
+	if (this.core.mouseScroll()) {
+		this.camera.changeDistance(this.core.mouseScroll());
+	}
 };
 module.exports = SceneLoading;
 
-},{"../assets_config":14,"../camera":15,"../data":17,"../dungeon_convert":20,"../hakurei":22,"../level":38,"../point_light":40,"../sprites":50,"../terrain":51,"../texture":52,"gl-matrix":2}],44:[function(require,module,exports){
+},{"../assets_config":14,"../camera":15,"../dungeon_convert":19,"../hakurei":21,"../level":37,"../point_light":39,"../programs":40,"../sprites":49,"../terrain":50,"../texture":51,"gl-matrix":2}],43:[function(require,module,exports){
 module.exports = "#define M_PI 3.1415926535897932384626433832795\n\nattribute vec3 aPosition;\nattribute vec3 aOffset;\nattribute vec2 aTexture;\nattribute float aMoving;\nattribute float aFlipped;\n\nuniform vec3 uCamPos;\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\nuniform float uCounter;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nconst vec3 camUp = vec3(0.0, 0.0, 1.0);\n\nvoid main(void) {\n\t// Billboarding\n\tvec3 look = normalize(uCamPos - aPosition);\n\tvec3 right = normalize(cross(camUp, look));\n\tvec3 up = normalize(cross(look, right));\n\n\tvec3 offset = aOffset;\n\tif (aMoving > 0.5 && offset.z < 0.5) {\n\t\t// Walking wobble animation\n\t\tfloat t = mod(1.5*uCounter/M_PI,2.0*M_PI);\n\t\tt = (abs(t-M_PI)-0.5*M_PI)*0.25;\n\t\tfloat x = offset.x;\n\t\tfloat z = offset.z;\n\t\tfloat c = cos(t);\n\t\tfloat s = sin(t);\n\t\toffset.x = x*c - z*s;\n\t\toffset.z = x*s + z*c;\n\t\tif (x < 0.0)\n\t\t\toffset.z *= 0.70;\n\t}\n\telse {\n\t\t// Idle wobble animation\n\t\tfloat t = mod(uCounter/M_PI,2.0*M_PI);\n\n\t\tvec3 mult = vec3(0.05, 0.0, 0.13);\n\t\tif (offset.x < 0.0)\n\t\t\tmult.x *= -1.0;\n\t\tif (offset.z > 0.5)\n\t\t\tmult.z *= -1.0;\n\t\telse\n\t\t\tmult.z = 0.0;\n\n\t\toffset.x += sin(t)*mult.x;\n\t\toffset.z += cos(t)*mult.z;\n\t}\n\tif (aFlipped > 0.5)\n\t\toffset.x *= -1.0;\n\n\t// Thanks to http://www.gamedev.net/topic/385785-billboard-shader/#entry3550648\n\tvec3 vR = offset.x*right;\n\tvec3 vU = offset.z*up;\n\tvec4 d = vec4(vR+vU+look*0.5, 0.0);\n\tvPosition = vWorldVertex =  uMMatrix * (vec4(aPosition, 1.0) + d);\n\n\tvWorldNormal = look;\n\tvTexture = aTexture;\n\n\tgl_Position = uPMatrix * uVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],45:[function(require,module,exports){
+},{}],44:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nvarying vec4 vPosition;\n\n// Via http://devmaster.net/posts/3002/shader-effects-shadow-mapping\nvec4 pack(float depth) {\n\tconst vec4 bias = vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);\n\n\tfloat r = depth;\n\tfloat g = fract(r*255.0);\n\tfloat b = fract(g*255.0);\n\tfloat a = fract(b*255.0);\n\tvec4 color = vec4(r, g, b, a);\n\n\treturn color - (color.yzww * bias);\n}\n\nvoid main(void) {\n\tfloat linearDepth = length(vPosition) * LinearDepthConstant;\n\t/*gl_FragColor = pack(linearDepth);*/\n\tgl_FragColor = vec4(1.0,0.0,1.0,1.0);\n}\n\n";
 
-},{}],46:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\n\nuniform mat4 uVMatrix;\nuniform mat4 uMMatrix;\nuniform mat4 uPMatrix;\n\nvarying vec4 vPosition;\n\nvoid main(void) {\n\tvPosition = uVMatrix * uMMatrix * vec4(aPosition + vec3(-8,-8,-8), 1.0);\n\tvPosition += vec4(0,0,-16,0);\n\tvPosition = vec4(aPosition, 1.0);\n\tgl_Position = uPMatrix * vPosition;\n}\n\n";
 
-},{}],47:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nstruct PointLight\n{\n\tfloat enabled;\n\tvec3 color;\n\tvec3 position;\n\tvec3 attenuation;\n};\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nuniform PointLight uLight[4];\nuniform sampler2D uDepthMap;\n\nuniform sampler2D uSampler; // texture coords\nuniform vec3 uAmbientColor;\n\nfloat unpack(vec4 color)\n{\n\tconst vec4 bitShifts = vec4(1.0, 1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0));\n\treturn dot(color, bitShifts);\n}\n\nvoid main(void) {\n\tvec3 normal = normalize(vWorldNormal);\n\tvec4 texColor = texture2D(uSampler, vec2(vTexture.s, vTexture.t));\n\tif (texColor.a < 0.1) // Transparent textures\n\t\tdiscard;\n\n\tvec3 color = uAmbientColor;\n\n\tfor (int i=0; i<4; i++) {\n\t\tif (uLight[i].enabled < 0.5)\n\t\t\tcontinue;\n\t\tvec3 lightVec = normalize(uLight[i].position - vWorldVertex.xyz);\n\t\tfloat l = dot(normal, lightVec);\n\n\t\tif (l <= 0.0)\n\t\t\tcontinue;\n\n\t\tfloat d = distance(vWorldVertex.xyz, uLight[i].position);\n\t\tfloat a = 1.0/(\n\t\t\tuLight[i].attenuation.x +\n\t\t\tuLight[i].attenuation.y*d + \n\t\t\tuLight[i].attenuation.z*d*d\n\t\t);\n\t\tcolor += l*a*uLight[i].color;\n\t}\n\n\t//vec3 depth = vPosition.xyz / vPosition.w;\n\t//depth.z = length(vWorldVertex.xyz - uLight[0].position) * LinearDepthConstant;\n\tfloat shadow = 1.0;\n\n\t//depth.z *= 0.96; // Offset depth \n\t//if (depth.z > unpack(texture2D(uDepthMap, depth.xy)))\n\t\t//shadow *= 0.5;\n\n\tgl_FragColor = clamp(vec4(texColor.rgb*color*shadow, texColor.a), 0.0, 1.0);\n}\n\n";
 
-},{}],48:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aTexture;\n\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\n\nuniform mat4 uLightVMatrix;\nuniform mat4 uLightPMatrix;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nvoid main(void) {\n\tvWorldVertex = uMMatrix * vec4(aPosition, 1.0);\n\tvec4 viewVertex = uVMatrix * vWorldVertex;\n\tgl_Position = uPMatrix * viewVertex;\n\n\tvTexture = aTexture;\n\tvWorldNormal = normalize(mat3(uMMatrix) * aNormal);\n\n\tvPosition = uLightPMatrix * uLightVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],49:[function(require,module,exports){
+},{}],48:[function(require,module,exports){
 'use strict';
 var Sprite = function(pos) {
 	this.pos = pos ? pos : [0,0,0];
@@ -10609,21 +10748,28 @@ Sprite.prototype.checkCollision = function(env) {
 };
 module.exports = Sprite;
 
-},{}],50:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
+
+/* 自分と自分についてくるキャラ */
+
 var Sprite = require("./sprite");
 
 var Sprites = function(gl, textureAtlas) {
 	this.gl = gl;
 	this.textureAtlas = textureAtlas;
 	this.sprites = [];
+
 	this.vertices = [];
-	this.offsets = [];
 	this.texCoords = [];
+	this.offsets = [];
 	this.indices = [];
 	this.moving = [];
 	this.flipped = [];
+
 	this.baseIndex = 0;
+
+	// WebGL が使うオブジェクト
 	this.vertexObject = gl.createBuffer();
 	this.texCoordObject = gl.createBuffer();
 	this.offsetObject = gl.createBuffer();
@@ -10723,7 +10869,7 @@ Sprites.prototype.offsetSprite = function(spriteId, d) {
 
 module.exports = Sprites;
 
-},{"./sprite":49}],51:[function(require,module,exports){
+},{"./sprite":48}],50:[function(require,module,exports){
 'use strict';
 
 /* 地形 */
@@ -10742,7 +10888,11 @@ var Terrain = function(gl, textureAtlas) {
 	this.texCoordObject = null;
 	this.indexObject = null;
 };
+
+// verticle index の数
 Terrain.prototype.numVertices = function() { return this.indices.length; };
+
+// 衝突判定
 Terrain.prototype.collision = function(x,y,z) {
 	if (x instanceof Array) {
 		z = x[2];
@@ -10761,6 +10911,7 @@ Terrain.prototype.collision = function(x,y,z) {
 	return this.cubes[z][y][x];
 };
 
+// 地形を構築するブロックをすべて生成
 Terrain.prototype.generate = function(world) {
 	this.cubes = world;
 	this.vertices = [];
@@ -10956,16 +11107,18 @@ Terrain.prototype.specialTiles = {
 };
 module.exports = Terrain;
 
-},{}],52:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 'use strict';
-var TextureAtlas = function(gl, image, tileSize) {
-	this.tileSizePx = tileSize;
 
+// gl: WebGLContext オブジェクト
+// image: Image オブジェクト
+// tilesizepx: 1キャラの px サイズ
+var TextureAtlas = function(gl, image, tileSizePx) {
 	this.imageSizePx = image.width; // width must equal height
 
-	this.tileSizeNormalized = this.tileSizePx/this.imageSizePx;
+	this.tileSizeNormalized = tileSizePx/this.imageSizePx;
 	this.paddingNormalized = 0.5/this.imageSizePx;
-	this.tilesPerRow = Math.floor(this.imageSizePx/this.tileSizePx);
+	this.tilesPerRow = Math.floor(this.imageSizePx/tileSizePx);
 
 	// image を texture に紐付け
 	this.texture = gl.createTexture();
@@ -10982,6 +11135,8 @@ TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
 
 /** Based on tile number, get the s and t coordinate ranges of the tile.
 	returns array of format [s1,t1,s2,t2] */
+/* テクスチャ画像のどこからどこまでを切り取るか。
+ * 座標は小数点 */
 TextureAtlas.prototype.getST = function(tileNum) {
 	var stRange = [
 		this.tileSizeNormalized * (tileNum % this.tilesPerRow) + this.paddingNormalized,
@@ -10994,4 +11149,4 @@ TextureAtlas.prototype.getST = function(tileNum) {
 
 module.exports = TextureAtlas;
 
-},{}]},{},[39]);
+},{}]},{},[38]);
