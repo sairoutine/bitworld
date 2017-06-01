@@ -108,6 +108,8 @@ SceneLoading.prototype.beforeDraw = function() {
 SceneLoading.prototype.draw = function(){
 	// 画面をクリア
 	this.core.gl.clearColor.apply(this.core.gl,this.data.background);
+	// canvasを初期化する際の深度を設定する
+	this.core.gl.clearDepth(1.0);
 	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT); // 画面上の色をクリア + 深度バッファクリア
 
 	this.core.gl.viewport(0, 0, this.core.width, this.core.height);
