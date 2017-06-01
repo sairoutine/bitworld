@@ -48,7 +48,6 @@ SceneLoading.prototype.init = function() {
 	// create and enable shaders
 	this.data = createData(this.core.gl);
 	this.core.gl.enable(this.core.gl.DEPTH_TEST);
-	//this.core.gl.useProgram(this.data.world.program); // 二重に使ってしまってるので不要なのでコメントアウト
 
 	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
@@ -134,6 +133,8 @@ SceneLoading.prototype.draw = function(){
 SceneLoading.prototype.renderWorld = function(){
 	this.core.gl.enable(this.core.gl.CULL_FACE);
 	this.core.gl.cullFace(this.core.gl.BACK);
+
+	// プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.world.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
@@ -180,6 +181,7 @@ SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 SceneLoading.prototype.renderSprites = function() {
 	this.core.gl.disable(this.core.gl.CULL_FACE);
 
+	// プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.sprites.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
