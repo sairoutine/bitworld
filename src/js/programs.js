@@ -4,8 +4,6 @@ var PointLight = require("./point_light");
 var worldV = require("./shader/world.vs");
 var worldF = require("./shader/world.fs");
 var billboardV = require("./shader/billboard.vs");
-var depthV = require("./shader/depth.vs");
-var depthF = require("./shader/depth.fs");
 
 /** Returns compiled shader */
 var getShader = function(gl, type, text) {
@@ -119,23 +117,6 @@ var programs = function (gl) {
 			],
 			{}
 		),
-		depth: newProgram(
-			gl,
-			depthV, depthF,
-			[
-				"Position"
-			],
-			[
-				"PMatrix", 
-				"NMatrix", 
-				"MMatrix", 
-			],
-			{
-				pMatrix: 4,
-				mMatrix: 4,
-				vMatrix: 4
-			}
-		)
 	};
 };
 
