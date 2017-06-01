@@ -11,6 +11,7 @@
  * シェーダーの調査
  * テクスチャの貼り付け方
 
+ * 深度バッファ関係を消してもよいのでは
  * 設計方針固める
  */
 
@@ -108,7 +109,7 @@ SceneLoading.prototype.beforeDraw = function() {
 SceneLoading.prototype.draw = function(){
 	// 画面をクリア
 	this.core.gl.clearColor.apply(this.core.gl,this.data.background);
-	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT);
+	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT); // 画面上の色をクリア + 深度バッファクリア
 
 	this.core.gl.viewport(0, 0, this.core.width, this.core.height);
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
@@ -136,6 +137,7 @@ SceneLoading.prototype.renderWorld = function(){
 	this.core.gl.useProgram(this.data.world.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
+	// uniform -> 頂点ごとに一律で渡されるデータ
 	this.core.gl.uniformMatrix4fv(this.data.world.u.MMatrix, false, this.data.world.m.mMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.world.u.VMatrix, false, this.data.world.m.vMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.world.u.PMatrix, false, this.data.world.m.pMatrix);
@@ -166,6 +168,7 @@ SceneLoading.prototype.updateLights = function(program){
 	}
 };
 
+// attribute -> 頂点ごとに異なるデータ
 SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 	if (!type)
 		type = this.core.gl.FLOAT;
