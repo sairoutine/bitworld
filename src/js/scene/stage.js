@@ -7,25 +7,11 @@
 
 /*
  * TODO
- * dungeon 周り読む
  * WebGL API の調査
  * シェーダーの調査
  * テクスチャの貼り付け方
- * 設計方針固める
 
- * 各種オブジェクトのリファクタ
-  terrain.js
-  sprite.js
-  sprites.js
-  camera.js
-  point_light.js
-  programs.js
-  data.js
-  level.js
-  dungeon.js
-  dungeon_convert.js
-  scene/stage.js
- * programs →リファクタ
+ * 設計方針固める
  */
 
 // utils
@@ -104,9 +90,9 @@ SceneLoading.prototype.goToLevel = function(l) {
 	this.lights[1] = new PointLight([1.0, 0.5, 0.0], centerXY(this.dungeonObj.upstairs), [0.2, 0.1, 0.05]);
 	this.terrain.generate(this.dungeonObj.cubes);
 
-	// キャラのポジション設定
+	// キャラのポジション設定をスタート地点に
 	this.player.pos = centerXY(this.dungeonObj.upstairs);
-	// キャラについてくるやつのポジション設定
+	// キャラについてくるやつのポジションをスタート地点に
 	this.sprites.sprites[1].pos = centerXY(this.dungeonObj.upstairs);
 	this.sprites.update();
 };

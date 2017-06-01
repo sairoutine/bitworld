@@ -1,11 +1,14 @@
 'use strict';
+
+// ステージは複数のルームによって構成される。ルームは複数のタイルによって構成される。
+
 var Level = function(ambient,floorTiles,wallTiles,tileDim,roomDim,roomMinSize) {
-	this.tileDim = tileDim;
-	this.roomDim = roomDim;
+	this.ambient = ambient;         // キャラ／ステージタイル／画面全体の環境光
+	this.floorTiles = floorTiles;   // タイル画像上の地面のタイル一覧
+	this.wallTiles = wallTiles;     // タイル画像上の壁のタイル一覧
+	this.tileDim = tileDim;         // ステージのタイルの縦, 横の数
+	this.roomDim = roomDim;         // ルームの縦, 横の数
 	this.roomMinSize = roomMinSize;
-	this.floorTiles = floorTiles;
-	this.wallTiles = wallTiles;
-	this.ambient = ambient;
 };
 
 var levels = [

@@ -3,9 +3,9 @@ var Dungeon = require("./dungeon");
 
 var DungeonConvert = function(level) {
 	var cubes = [];
-	var upstairs = [0,0,0];
-	var downstairs = [0,0,0];
-	var tileDim = level.tileDim;
+	var upstairs = [0,0,0];   // スタート地点
+	var downstairs = [0,0,0]; // ゴール地点
+	var tileDim = level.tileDim; // ステージのタイルの縦×横の数
 	var roomDim = level.roomDim;
 	var roomMinSize = level.roomMinSize;
 	var d = new Dungeon(tileDim,roomDim,roomMinSize);
@@ -22,12 +22,12 @@ var DungeonConvert = function(level) {
 					cubes[z][y][x] = getWall(z); break;
 				case d.tileVals.floor:
 					cubes[z][y][x] = getFloor(z); break;
-				case d.tileVals.up:
-					cubes[z][y][x] = getUp(z); 
+				case d.tileVals.up: // スタート地点
+					cubes[z][y][x] = getUp(z);
 					upstairs = [x,y,1.2];
 					break;
-				case d.tileVals.down:
-					cubes[z][y][x] = getDown(z); 
+				case d.tileVals.down: // ゴール地点
+					cubes[z][y][x] = getDown(z);
 					downstairs = [x,y,1.2];
 					break;
 				}
@@ -57,12 +57,12 @@ var DungeonConvert = function(level) {
 	function getUp(z) {
 		if (z > 0)
 			return 0;
-		return 212;
+		return 212; // タイル画像上の位置
 	}
 	function getDown(z) {
 		if (z > 0)
 			return 0;
-		return 211;
+		return 211; // タイル画像上の位置
 	}
 };
 module.exports = DungeonConvert;
