@@ -19,6 +19,7 @@ var Sprites = function(gl, textureAtlas) {
 	this.baseIndex = 0;
 
 	// WebGL が使うオブジェクト
+	// 10. 頂点バッファを作成
 	this.vertexObject = gl.createBuffer();
 	this.texCoordObject = gl.createBuffer();
 	this.offsetObject = gl.createBuffer();
@@ -35,7 +36,8 @@ Sprites.prototype.update = function() {
 		this.flipSprite(i,this.sprites[i].flipped);
 	}
 
-	// Initialize buffer data
+	// 11. 頂点バッファをバインドする
+	// 12. 頂点バッファにデータをセット
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexObject);
 	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
 
@@ -54,6 +56,7 @@ Sprites.prototype.update = function() {
 	this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexObject);
 	this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
 
+	// 頂点バッファのバインドをクリア
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
 	for (i=0; i<this.sprites.length; i++) {
