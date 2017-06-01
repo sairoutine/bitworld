@@ -136,7 +136,7 @@ SceneLoading.prototype.renderWorld = function(){
 	this.core.gl.enable(this.core.gl.CULL_FACE);
 	this.core.gl.cullFace(this.core.gl.BACK);
 
-	// プログラムオブジェクトを有効にする
+	// 13. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.world.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
@@ -183,7 +183,7 @@ SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 SceneLoading.prototype.renderSprites = function() {
 	this.core.gl.disable(this.core.gl.CULL_FACE);
 
-	// プログラムオブジェクトを有効にする
+	// 13. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.sprites.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 

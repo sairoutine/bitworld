@@ -62,10 +62,11 @@ var newProgram = function(gl, vs, fs, att, uni, mats) {
 
 	var i;
 	// Set attributes
+	// 09. 変数名が、シェーダ内での何番目の attribute 変数なのか取得
 	for (i=0; i<att.length; i++) 
 		p.a[att[i]] = gl.getAttribLocation(glProgram, "a"+att[i]);
 
-	// Set uniforms
+	// 10. 変数名が、シェーダ内での何番目の uniform 変数なのか取得
 	for (i=0; i<uni.length; i++) 
 		p.u[uni[i]] = gl.getUniformLocation(glProgram, "u"+uni[i]);
 

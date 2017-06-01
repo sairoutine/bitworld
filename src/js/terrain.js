@@ -89,14 +89,14 @@ Terrain.prototype.generate = function(world) {
 	this.gl.deleteBuffer(this.texCoordObject);
 	this.gl.deleteBuffer(this.indexObject);
 	*/
-	// 09. 頂点バッファを作成
+	// 11. 頂点バッファを作成
 	this.vertexObject = this.gl.createBuffer();
 	this.normalObject = this.gl.createBuffer();
 	this.texCoordObject = this.gl.createBuffer();
 	this.indexObject = this.gl.createBuffer();
 
-	// 10. 頂点バッファをバインドする
-	// 11. 頂点バッファにデータをセット
+	// 12. 頂点バッファをバインドする
+	// 13. 頂点バッファにデータをセット
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexObject);
 	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
 
