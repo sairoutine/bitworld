@@ -92,12 +92,15 @@ var programs = function (gl) {
 	return {
 		world: newProgram(
 			gl,
-			worldV, worldF, 
+			// 頂点シェーダ／フラグメントシェーダ
+			worldV, worldF,
+			// attribute 変数一覧
 			[
 				"Position", 
 				"Texture", 
 				"Normal"
 			],
+			// uniform 変数一覧
 			[
 				"PMatrix", 
 				"MMatrix", 
@@ -109,6 +112,7 @@ var programs = function (gl) {
 				"DepthMap", 
 				"Light"
 			],
+			// 変数がいくつの要素から成るか
 			{
 				pMatrix: 4,
 				mMatrix: 4,
@@ -117,7 +121,9 @@ var programs = function (gl) {
 		),
 		sprites: newProgram(
 			gl,
+			// 頂点シェーダ／フラグメントシェーダ
 			billboardV, worldF, 
+			// attribute 変数一覧
 			[
 				"Position", 
 				"Offset",
@@ -125,6 +131,7 @@ var programs = function (gl) {
 				"Moving",
 				"Flipped"
 			],
+			// uniform 変数一覧
 			[
 				"Counter", 
 				"CamPos", 
