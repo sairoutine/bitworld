@@ -25,8 +25,8 @@ TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
 	gl.generateMipmap(gl.TEXTURE_2D);
 
 	// 14. テクスチャパラメータの設定
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); //テクスチャが縮小される際の補間方法
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); //テクスチャが拡大される際の補間方法
 	gl.bindTexture(gl.TEXTURE_2D, null);
 };
 
