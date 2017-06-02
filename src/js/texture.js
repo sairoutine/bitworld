@@ -10,14 +10,19 @@ var TextureAtlas = function(gl, image, tileSizePx) {
 	this.paddingNormalized = 0.5/this.imageSizePx;
 	this.tilesPerRow = Math.floor(this.imageSizePx/tileSizePx);
 
+	// 11. テクスチャを作成
 	// image を texture に紐付け
 	this.texture = gl.createTexture();
 	this.handleTexture(gl, image, this.texture);
 };
 
 TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
+	// 12. 頂点バッファをバインドする
 	gl.bindTexture(gl.TEXTURE_2D, texture);
+	// 13. テクスチャへイメージを適用
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+	// 13. ミップマップを生成
+	gl.generateMipmap(gl.TEXTURE_2D);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	gl.bindTexture(gl.TEXTURE_2D, null);
