@@ -5,23 +5,20 @@
 // y: 画面奥
 // x: 画面上
 
-/*
- * TODO
- * WebGL API の調査
- * シェーダーの調査
- * テクスチャの貼り付け方
-
- * setlightuniforms リファクタ
- * 設計方針固める
- */
+/* 設計
+point_light.js
+camera
+texture.js
+terrain.js
+block.js
+player.js
+shader_program.js // shader text, shader object, program object, uniform/attribute num
+*/
 
 // utils
 function centerXY(pos) {
 	return [pos[0]+0.5, pos[1]+0.5, pos[2]];
 }
-
-
-
 
 var base_scene = require('../hakurei').scene.base;
 var CONSTANT = require('../hakurei').constant;
