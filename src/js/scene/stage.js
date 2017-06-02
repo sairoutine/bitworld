@@ -48,6 +48,7 @@ SceneLoading.prototype.init = function() {
 	// create and enable shaders
 	this.data = createData(this.core.gl);
 	this.core.gl.enable(this.core.gl.DEPTH_TEST);
+	this.core.gl.depthFunc(this.core.gl.LEQUAL);
 
 	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
