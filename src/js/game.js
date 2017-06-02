@@ -3,7 +3,7 @@ var core = require('./hakurei').core;
 var util = require('./hakurei').util;
 var CONSTANT = require('./constant');
 
-var SceneLoading = require('./scene/loading');
+var AssetsConfig = require('./assets_config');
 var SceneStage = require('./scene/stage');
 
 var Game = function(canvas) {
@@ -14,10 +14,9 @@ util.inherit(Game, core);
 Game.prototype.init = function () {
 	core.prototype.init.apply(this, arguments);
 
-	this.addScene("loading", new SceneLoading(this));
 	this.addScene("stage", new SceneStage(this));
 
-	this.changeScene("loading");
+	this.changeSceneWithLoading("stage", AssetsConfig);
 };
 Game.prototype.playSound = function () {
 	if (CONSTANT.DEBUG.SOUND_OFF) return;
