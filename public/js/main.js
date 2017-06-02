@@ -7308,9 +7308,9 @@ var Dungeon = require("./dungeon");
 
 var DungeonConvert = function(level) {
 	var cubes = [];
-	var upstairs = [0,0,0];
-	var downstairs = [0,0,0];
-	var tileDim = level.tileDim;
+	var upstairs = [0,0,0];   // スタート地点
+	var downstairs = [0,0,0]; // ゴール地点
+	var tileDim = level.tileDim; // ステージのタイルの縦×横の数
 	var roomDim = level.roomDim;
 	var roomMinSize = level.roomMinSize;
 	var d = new Dungeon(tileDim,roomDim,roomMinSize);
@@ -7327,12 +7327,12 @@ var DungeonConvert = function(level) {
 					cubes[z][y][x] = getWall(z); break;
 				case d.tileVals.floor:
 					cubes[z][y][x] = getFloor(z); break;
-				case d.tileVals.up:
-					cubes[z][y][x] = getUp(z); 
+				case d.tileVals.up: // スタート地点
+					cubes[z][y][x] = getUp(z);
 					upstairs = [x,y,1.2];
 					break;
-				case d.tileVals.down:
-					cubes[z][y][x] = getDown(z); 
+				case d.tileVals.down: // ゴール地点
+					cubes[z][y][x] = getDown(z);
 					downstairs = [x,y,1.2];
 					break;
 				}
@@ -7362,12 +7362,12 @@ var DungeonConvert = function(level) {
 	function getUp(z) {
 		if (z > 0)
 			return 0;
-		return 212;
+		return 212; // タイル画像上の位置
 	}
 	function getDown(z) {
 		if (z > 0)
 			return 0;
-		return 211;
+		return 211; // タイル画像上の位置
 	}
 };
 module.exports = DungeonConvert;
@@ -7378,7 +7378,7 @@ var core = require('./hakurei').core;
 var util = require('./hakurei').util;
 var CONSTANT = require('./constant');
 
-var SceneLoading = require('./scene/loading');
+var AssetsConfig = require('./assets_config');
 var SceneStage = require('./scene/stage');
 
 var Game = function(canvas) {
@@ -7389,10 +7389,9 @@ util.inherit(Game, core);
 Game.prototype.init = function () {
 	core.prototype.init.apply(this, arguments);
 
-	this.addScene("loading", new SceneLoading(this));
 	this.addScene("stage", new SceneStage(this));
 
-	this.changeScene("loading");
+	this.changeSceneWithLoading("stage", AssetsConfig);
 };
 Game.prototype.playSound = function () {
 	if (CONSTANT.DEBUG.SOUND_OFF) return;
@@ -7409,7 +7408,7 @@ Game.prototype.stopBGM = function () {
 
 module.exports = Game;
 
-},{"./constant":16,"./hakurei":21,"./scene/loading":41,"./scene/stage":42}],21:[function(require,module,exports){
+},{"./assets_config":14,"./constant":16,"./hakurei":21,"./scene/stage":42}],21:[function(require,module,exports){
 'use strict';
 
 module.exports = require("./hakureijs/index");
@@ -7515,7 +7514,7 @@ AudioLoader.prototype.loadBGM = function(name, path, volume, loopStart, loopEnd)
 };
 
 AudioLoader.prototype.isAllLoaded = function() {
-	return this.loaded_audio_num > 0 && this.loaded_audio_num === this.loading_audio_num;
+	return this.loaded_audio_num === this.loading_audio_num;
 };
 
 AudioLoader.prototype.playSound = function(name) {
@@ -7652,7 +7651,7 @@ ImageLoader.prototype.loadImage = function(name, path) {
 };
 
 ImageLoader.prototype.isAllLoaded = function() {
-	return this.loaded_image_num > 0 && this.loaded_image_num === this.loading_image_num;
+	return this.loaded_image_num === this.loading_image_num;
 };
 
 ImageLoader.prototype.getImage = function(name) {
@@ -7694,6 +7693,7 @@ var CONSTANT = require("./constant");
 var ImageLoader = require("./asset_loader/image");
 var AudioLoader = require("./asset_loader/audio");
 var FontLoader = require("./asset_loader/font");
+var SceneLoading = require('./scene/loading');
 
 var Core = function(canvas, options) {
 	if(!options) {
@@ -7762,9 +7762,11 @@ Core.prototype.init = function () {
 	this.mouse_y = 0;
 	this.mouse_scroll = 0;
 
-
-
 	this.image_loader.init();
+	this.audio_loader.init();
+	this.font_loader.init();
+
+	this.addScene("loading", new SceneLoading(this));
 };
 Core.prototype.enableGamePad = function () {
 	this.is_connect_gamepad = true;
@@ -7850,6 +7852,11 @@ Core.prototype.changeNextSceneIfReserved = function() {
 		this._reserved_next_scene = null;
 	}
 };
+Core.prototype.changeSceneWithLoading = function(scene, assets) {
+	if(!assets) assets = {};
+	this.changeScene("loading", assets, scene);
+};
+
 Core.prototype.clearCanvas = function() {
 	if (this.is2D()) {
 		// 2D
@@ -8095,11 +8102,9 @@ Core.prototype.createWebGLContext = function(canvas) {
 
 
 
-
-
 module.exports = Core;
 
-},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25,"webgl-debug":28}],27:[function(require,module,exports){
+},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25,"./scene/loading":33,"webgl-debug":28}],27:[function(require,module,exports){
 'use strict';
 module.exports = {
 	util: require("./util"),
@@ -8108,6 +8113,7 @@ module.exports = {
 	serif_manager: require("./serif_manager"),
 	scene: {
 		base: require("./scene/base"),
+		loading: require("./scene/loading"),
 	},
 	object: {
 		base: require("./object/base"),
@@ -8126,7 +8132,7 @@ module.exports = {
 
 };
 
-},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25,"./core":26,"./object/base":29,"./object/pool_manager":30,"./object/sprite":31,"./scene/base":32,"./serif_manager":33,"./storage/base":34,"./storage/save":35,"./util":36}],28:[function(require,module,exports){
+},{"./asset_loader/audio":22,"./asset_loader/font":23,"./asset_loader/image":24,"./constant":25,"./core":26,"./object/base":29,"./object/pool_manager":30,"./object/sprite":31,"./scene/base":32,"./scene/loading":33,"./serif_manager":34,"./storage/base":35,"./storage/save":36,"./util":37}],28:[function(require,module,exports){
 (function (global){
 /*
 ** Copyright (c) 2012 The Khronos Group Inc.
@@ -9308,7 +9314,7 @@ ObjectBase.prototype.setVelocity = function(velocity) {
 module.exports = ObjectBase;
 
 
-},{"../util":36}],30:[function(require,module,exports){
+},{"../util":37}],30:[function(require,module,exports){
 'use strict';
 
 // TODO: add pooling logic
@@ -9395,7 +9401,7 @@ PoolManager.prototype.checkCollisionWithManager = function(manager) {
 
 module.exports = PoolManager;
 
-},{"../util":36,"./base":29}],31:[function(require,module,exports){
+},{"../util":37,"./base":29}],31:[function(require,module,exports){
 'use strict';
 var base_object = require('./base');
 var util = require('../util');
@@ -9533,7 +9539,7 @@ Sprite.prototype.isReflect = function(){
 
 module.exports = Sprite;
 
-},{"../util":36,"./base":29}],32:[function(require,module,exports){
+},{"../util":37,"./base":29}],32:[function(require,module,exports){
 'use strict';
 
 var SceneBase = function(core, scene) {
@@ -9641,6 +9647,75 @@ module.exports = SceneBase;
 
 
 },{}],33:[function(require,module,exports){
+'use strict';
+
+// loading scene
+
+var base_scene = require('./base');
+var util = require('../util');
+
+var SceneLoading = function(core) {
+	base_scene.apply(this, arguments);
+
+	// go if the all assets loading is done.
+	this.next_scene_name = null;
+};
+util.inherit(SceneLoading, base_scene);
+
+SceneLoading.prototype.init = function(assets, next_scene_name) {
+	base_scene.prototype.init.apply(this, arguments);
+
+	// assets
+	var images = assets.images || [];
+	var sounds = assets.sounds || [];
+	var bgms   = assets.bgms   || [];
+
+	// go if the all assets loading is done.
+	this.next_scene_name = next_scene_name;
+
+	for (var key in images) {
+		this.core.image_loader.loadImage(key, images[key]);
+	}
+
+	for (var key2 in sounds) {
+		var conf2 = sounds[key2];
+		this.core.audio_loader.loadSound(key2, conf2.path, conf2.volume);
+	}
+
+	for (var key3 in bgms) {
+		var conf3 = bgms[key3];
+		this.core.audio_loader.loadBGM(key3, conf3.path, 1.0, conf3.loopStart, conf3.loopEnd);
+	}
+};
+
+SceneLoading.prototype.beforeDraw = function() {
+	base_scene.prototype.beforeDraw.apply(this, arguments);
+
+	// TODO: not wait font loading if no font is ready to load
+	//if (this.core.image_loader.isAllLoaded() && this.core.audio_loader.isAllLoaded() && this.core.font_loader.isAllLoaded()) {
+	if (this.core.image_loader.isAllLoaded() && this.core.audio_loader.isAllLoaded()) {
+		this.notifyAllLoaded();
+	}
+};
+
+SceneLoading.prototype.progress = function(){
+	var progress = (this.core.audio_loader.progress() + this.core.image_loader.progress() + this.core.font_loader.progress()) / 3;
+	return progress;
+};
+
+SceneLoading.prototype.draw = function(){
+	base_scene.prototype.draw.apply(this, arguments);
+};
+SceneLoading.prototype.notifyAllLoaded = function(){
+	if (this.next_scene_name) {
+		this.core.changeScene(this.next_scene_name);
+	}
+};
+
+
+module.exports = SceneLoading;
+
+},{"../util":37,"./base":32}],34:[function(require,module,exports){
 'use strict';
 
 var SerifManager = function () {
@@ -9794,7 +9869,7 @@ SerifManager.prototype.lines = function () {
 
 module.exports = SerifManager;
 
-},{}],34:[function(require,module,exports){
+},{}],35:[function(require,module,exports){
 (function (process){
 'use strict';
 
@@ -9958,7 +10033,7 @@ StorageBase.prototype._removeWebStorage = function() {
 module.exports = StorageBase;
 
 }).call(this,require('_process'))
-},{"_process":13,"fs":1,"path":12}],35:[function(require,module,exports){
+},{"_process":13,"fs":1,"path":12}],36:[function(require,module,exports){
 'use strict';
 var base_class = require('./base');
 var util = require('../util');
@@ -9980,7 +10055,7 @@ StorageSave.KEY = function(){
 
 module.exports = StorageSave;
 
-},{"../util":36,"./base":34}],36:[function(require,module,exports){
+},{"../util":37,"./base":35}],37:[function(require,module,exports){
 'use strict';
 var Util = {
 	inherit: function( child, parent ) {
@@ -10027,15 +10102,18 @@ var Util = {
 
 module.exports = Util;
 
-},{}],37:[function(require,module,exports){
+},{}],38:[function(require,module,exports){
 'use strict';
+
+// ステージは複数のルームによって構成される。ルームは複数のタイルによって構成される。
+
 var Level = function(ambient,floorTiles,wallTiles,tileDim,roomDim,roomMinSize) {
-	this.tileDim = tileDim;
-	this.roomDim = roomDim;
+	this.ambient = ambient;         // キャラ／ステージタイル／画面全体の環境光
+	this.floorTiles = floorTiles;   // タイル画像上の地面のタイル一覧
+	this.wallTiles = wallTiles;     // タイル画像上の壁のタイル一覧
+	this.tileDim = tileDim;         // ステージのタイルの縦, 横の数
+	this.roomDim = roomDim;         // ルームの縦, 横の数
 	this.roomMinSize = roomMinSize;
-	this.floorTiles = floorTiles;
-	this.wallTiles = wallTiles;
-	this.ambient = ambient;
 };
 
 var levels = [
@@ -10050,11 +10128,12 @@ var levels = [
 ];
 
 Level.getLevel = function(l) {
-	return levels[Math.min(Math.floor(l/2),levels.length-1)];
+	// 2レベル毎にステージ移動
+	return levels[Math.min(Math.floor(l/2), levels.length-1)];
 };
 module.exports = Level;
 
-},{}],38:[function(require,module,exports){
+},{}],39:[function(require,module,exports){
 'use strict';
 var Game = require('./game');
 
@@ -10099,7 +10178,7 @@ window.changeFullScreen = function () {
 	game.fullscreen();
 };
 
-},{"./game":20}],39:[function(require,module,exports){
+},{"./game":20}],40:[function(require,module,exports){
 'use strict';
 var PointLight = function(color, position, attenuation, enabled) {
 	this.color = color ? color : [1.0, 1.0, 1.0];
@@ -10118,43 +10197,59 @@ PointLight.prototype.update = function() {
 };
 module.exports = PointLight;
 
-},{}],40:[function(require,module,exports){
+},{}],41:[function(require,module,exports){
 'use strict';
 var glmat = require("gl-matrix");
 var PointLight = require("./point_light");
 var worldV = require("./shader/world.vs");
 var worldF = require("./shader/world.fs");
 var billboardV = require("./shader/billboard.vs");
-var depthV = require("./shader/depth.vs");
-var depthF = require("./shader/depth.fs");
 
 /** Returns compiled shader */
 var getShader = function(gl, type, text) {
+	// 01. シェーダ作成
 	var shader = gl.createShader(type);
+
+	// 02. 生成されたシェーダにソースを割り当てる
 	gl.shaderSource(shader, text);
+
+	// 03. シェーダをコンパイルする
 	gl.compileShader(shader);
 
+	// 04. シェーダが正しくコンパイルされたかチェック
 	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-		throw (type == gl.VERTEX_SHADER ? "Vertex" : "Fragment")
-			+ " failed to compile:\n\n" 
-			+ gl.getShaderInfoLog(shader);
+		throw (
+			(type === gl.VERTEX_SHADER ? "Vertex" : "Fragment") + " failed to compile:\n\n" + gl.getShaderInfoLog(shader));
 	}
 
 	return shader;
 };
 
+
+// プログラムオブジェクト(頂点シェーダ->フラグメントシェーダのデータの受け渡し)の作成
 /** Assigns shaders to program and returns the program */
 var initShader = function(gl, vertexShaderText, fragmentShaderText) {
+	// シェーダのコンパイル
+	var vertexShader   = getShader(gl, gl.VERTEX_SHADER, vertexShaderText);
+	var fragmentShader = getShader(gl, gl.FRAGMENT_SHADER, fragmentShaderText);
+
+	// 05. プログラムオブジェクトの生成
 	var shaderProgram = gl.createProgram();
-	gl.attachShader(shaderProgram, getShader(gl, gl.VERTEX_SHADER, vertexShaderText));
-	gl.attachShader(shaderProgram, getShader(gl, gl.FRAGMENT_SHADER, fragmentShaderText));
+
+	// 06. プログラムオブジェクトにシェーダを割り当てる
+	gl.attachShader(shaderProgram, vertexShader);
+	gl.attachShader(shaderProgram, fragmentShader);
+
+	// 07. シェーダをリンク
 	gl.linkProgram(shaderProgram);
 
-	if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) 
-		throw new Error("Could not initialize shaders");
+	// 08. シェーダのリンクが正しく行なわれたかチェック
+	if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS)) {
+		throw new Error("Could not initialize shaders:\n\n" + gl.getProgramInfoLog(shaderProgram));
+	}
 
 	return shaderProgram;
-}
+};
 
 var newProgram = function(gl, vs, fs, att, uni, mats) {
 	var glProgram = initShader(gl, vs,fs);
@@ -10164,13 +10259,26 @@ var newProgram = function(gl, vs, fs, att, uni, mats) {
 		u: {},
 		m: {}
 	};
+
+	var i;
 	// Set attributes
-	for (var i=0; i<att.length; i++) 
+	// 09. 変数名が、シェーダ内での何番目の attribute 変数なのか取得
+	for (i=0; i<att.length; i++) 
 		p.a[att[i]] = gl.getAttribLocation(glProgram, "a"+att[i]);
 
-	// Set uniforms
-	for (var i=0; i<uni.length; i++) 
+	// 10. 変数名が、シェーダ内での何番目の uniform 変数なのか取得
+	for (i=0; i<uni.length; i++) 
 		p.u[uni[i]] = gl.getUniformLocation(glProgram, "u"+uni[i]);
+
+	// Uniform array of PointLight structs in GLSL
+	p.u["Light"] = [];
+	for (i=0; i<4; i++) {
+		var l = p.u["Light"];
+		l[i] = {};
+		for (var key in new PointLight()) {
+			l[i][key] = gl.getUniformLocation(glProgram, "uLight["+i+"]."+key);
+		}
+	}
 
 	// Initialize matrices
 	for (var prop in mats) {
@@ -10185,32 +10293,40 @@ var newProgram = function(gl, vs, fs, att, uni, mats) {
 		p.m[prop] = mat.create();
 		mat.identity(p.m[prop]);
 	}
+
 	return p;
 };
 
-
-
-var programs = function (gl) {
+module.exports = function (gl) {
 	return {
+		// 背景色
+		//background: [0.5, 0.5, 0.5, 1.0], // 灰色
+		background: [0, 0, 0, 1], // 黒
+		rotateSpeed: 0.01,
+		zoomFactor: 0.01,
 		world: newProgram(
 			gl,
-			worldV, worldF, 
+			// 頂点シェーダ／フラグメントシェーダ
+			worldV, worldF,
+			// attribute 変数一覧
 			[
 				"Position", 
 				"Texture", 
 				"Normal"
 			],
+			// uniform 変数一覧
 			[
 				"PMatrix", 
 				"MMatrix", 
 				"VMatrix", 
-				"Sampler", 
+				"Sampler", // テクスチャ
 				"LightVMatrix", 
 				"LightPMatrix", 
 				"AmbientColor", 
 				"DepthMap", 
 				"Light"
 			],
+			// 変数がいくつの要素から成るか
 			{
 				pMatrix: 4,
 				mMatrix: 4,
@@ -10219,7 +10335,9 @@ var programs = function (gl) {
 		),
 		sprites: newProgram(
 			gl,
+			// 頂点シェーダ／フラグメントシェーダ
 			billboardV, worldF, 
+			// attribute 変数一覧
 			[
 				"Position", 
 				"Offset",
@@ -10227,167 +10345,24 @@ var programs = function (gl) {
 				"Moving",
 				"Flipped"
 			],
+			// uniform 変数一覧
 			[
 				"Counter", 
 				"CamPos", 
 				"PMatrix", 
 				"MMatrix", 
 				"VMatrix", 
-				"Sampler", 
+				"Sampler", // テクスチャ
 				"AmbientColor", 
 				"DepthMap", 
 				"Light"
 			],
 			{}
 		),
-		depth: newProgram(
-			gl,
-			depthV, depthF,
-			[
-				"Position"
-			],
-			[
-				"PMatrix", 
-				"NMatrix", 
-				"MMatrix", 
-			],
-			{
-				pMatrix: 4,
-				mMatrix: 4,
-				vMatrix: 4
-			}
-		)
 	};
 };
 
-
-var CreateData = function(gl){
-		var data = programs(gl);
-
-		// Uniform array of PointLight structs in GLSL
-		setLightUniforms(gl, data.world);
-		setLightUniforms(gl, data.sprites);
-
-		// 背景色
-		//data.background = [0.5, 0.5, 0.5, 1.0];
-		data.background = [0, 0, 0, 1]; // 黒
-		data.rotateSpeed = 0.01;
-		data.zoomFactor = 0.01;
-		return data;
-};
-function setLightUniforms(gl, prog) {
-	// Uniform array of PointLight structs in GLSL
-	prog.u.Light = [];
-	for (var i=0; i<4; i++) {
-		var l = prog.u.Light;
-		l[i] = {};
-		for (var key in new PointLight()) {
-			l[i][key] = gl.getUniformLocation(prog.program, "uLight["+i+"]."+key);
-		}
-	}
-}
-
-
-
-module.exports = CreateData;
-
-},{"./point_light":39,"./shader/billboard.vs":43,"./shader/depth.fs":44,"./shader/depth.vs":45,"./shader/world.fs":46,"./shader/world.vs":47,"gl-matrix":2}],41:[function(require,module,exports){
-'use strict';
-
-// ローディングシーン
-
-var base_scene = require('../hakurei').scene.base;
-var util = require('../hakurei').util;
-var AssetsConfig = require('../assets_config');
-
-var SceneLoading = function(core) {
-	base_scene.apply(this, arguments);
-};
-util.inherit(SceneLoading, base_scene);
-
-SceneLoading.prototype.init = function() {
-	base_scene.prototype.init.apply(this, arguments);
-
-	// ゲームで使用する画像一覧
-	for (var key in AssetsConfig.images) {
-		this.core.image_loader.loadImage(key, AssetsConfig.images[key]);
-	}
-
-	// ゲームで使用するSE一覧
-	for (var key2 in AssetsConfig.sounds) {
-		var conf2 = AssetsConfig.sounds[key2];
-		this.core.audio_loader.loadSound(key2, conf2.path, conf2.volume);
-	}
-
-	// ゲームで使用するBGM一覧
-	for (var key3 in AssetsConfig.bgms) {
-		var conf3 = AssetsConfig.bgms[key3];
-		this.core.audio_loader.loadBGM(key3, conf3.path, 1.0, conf3.loopStart, conf3.loopEnd);
-	}
-};
-
-SceneLoading.prototype.beforeDraw = function() {
-	base_scene.prototype.beforeDraw.apply(this, arguments);
-
-	//if (this.core.image_loader.isAllLoaded() && this.core.audio_loader.isAllLoaded() && this.core.font_loader.isAllLoaded()) {
-	if (this.core.image_loader.isAllLoaded()) {
-		this.core.changeScene("stage");
-	}
-};
-SceneLoading.prototype.draw = function(){
-	base_scene.prototype.draw.apply(this, arguments);
-	var ctx = this.core.ctx;
-
-	if(!ctx) return; // 2D context has been depricated in this game
-
-	// 背景
-	ctx.save();
-	ctx.fillStyle = 'white';
-	ctx.fillRect(0, 0, this.core.width, this.core.height);
-	ctx.restore();
-
-	// メッセージ
-	var per_frame = this.frame_count % 60;
-	var DOT_SPAN = 15;
-
-	var dot = "";
-	if (DOT_SPAN > per_frame && per_frame >= 0) {
-		dot = "";
-	}
-	else if (DOT_SPAN*2 > per_frame && per_frame >= DOT_SPAN*1) {
-		dot = ".";
-	}
-	else if (DOT_SPAN*3 > per_frame && per_frame >= DOT_SPAN*2) {
-		dot = "..";
-	}
-	else {
-		dot = "...";
-	}
-
-	ctx.save();
-	ctx.fillStyle = 'rgb( 0, 0, 0 )';
-	ctx.textAlign = 'left';
-	ctx.font = "30px 'Migu'";
-	ctx.fillText('Now Loading' + dot, this.core.width - 250, this.core.height - 50);
-	ctx.restore();
-
-
-	// プログレスバー
-	ctx.save();
-	ctx.fillStyle = 'rgb(119, 66, 244)';
-	ctx.fillRect(0, this.core.height - 20, this.core.width * this.progress(), 50);
-	ctx.restore();
-};
-
-
-SceneLoading.prototype.progress = function(){
-	var progress = (this.core.audio_loader.progress() + this.core.image_loader.progress() + this.core.font_loader.progress()) / 3;
-	return progress;
-};
-
-module.exports = SceneLoading;
-
-},{"../assets_config":14,"../hakurei":21}],42:[function(require,module,exports){
+},{"./point_light":40,"./shader/billboard.vs":43,"./shader/world.fs":44,"./shader/world.vs":45,"gl-matrix":2}],42:[function(require,module,exports){
 'use strict';
 
 // [x, y, z]
@@ -10395,36 +10370,20 @@ module.exports = SceneLoading;
 // y: 画面奥
 // x: 画面上
 
-/*
- * TODO
- * dungeon 周り読む
- * WebGL API の調査
- * シェーダーの調査
- * テクスチャの貼り付け方
- * 設計方針固める
-
- * 各種オブジェクトのリファクタ
-  terrain.js
-  sprite.js
-  sprites.js
-  camera.js
-  point_light.js
-  programs.js
-  data.js
-  level.js
-  dungeon.js
-  dungeon_convert.js
-  scene/stage.js
- * programs →リファクタ
- */
+/* 設計
+point_light.js
+camera
+texture.js
+terrain.js
+block.js
+player.js
+shader_program.js // shader text, shader object, program object, uniform/attribute num
+*/
 
 // utils
 function centerXY(pos) {
 	return [pos[0]+0.5, pos[1]+0.5, pos[2]];
 }
-
-
-
 
 var base_scene = require('../hakurei').scene.base;
 var CONSTANT = require('../hakurei').constant;
@@ -10451,7 +10410,7 @@ SceneLoading.prototype.init = function() {
 	// create and enable shaders
 	this.data = createData(this.core.gl);
 	this.core.gl.enable(this.core.gl.DEPTH_TEST);
-	//this.core.gl.useProgram(this.data.world.program); // 二重に使ってしまってるので不要なのでコメントアウト
+	this.core.gl.depthFunc(this.core.gl.LEQUAL);
 
 	var land    = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("ldfaithful"), 8);
 	var sprites = new TextureAtlas(this.core.gl, this.core.image_loader.getImage("oryx"), 8);
@@ -10463,7 +10422,7 @@ SceneLoading.prototype.init = function() {
 
 	// レベル
 	this.levelNum = 0; // 1~8
-	this.level = Level.getLevel(this.levelNum); // TODO: gotolevel 内でやっているので不要では
+	this.level = null;
 
 	// ライト一覧
 	this.lights = [];
@@ -10494,9 +10453,9 @@ SceneLoading.prototype.goToLevel = function(l) {
 	this.lights[1] = new PointLight([1.0, 0.5, 0.0], centerXY(this.dungeonObj.upstairs), [0.2, 0.1, 0.05]);
 	this.terrain.generate(this.dungeonObj.cubes);
 
-	// キャラのポジション設定
+	// キャラのポジション設定をスタート地点に
 	this.player.pos = centerXY(this.dungeonObj.upstairs);
-	// キャラについてくるやつのポジション設定
+	// キャラについてくるやつのポジションをスタート地点に
 	this.sprites.sprites[1].pos = centerXY(this.dungeonObj.upstairs);
 	this.sprites.update();
 };
@@ -10511,8 +10470,10 @@ SceneLoading.prototype.beforeDraw = function() {
 };
 SceneLoading.prototype.draw = function(){
 	// 画面をクリア
-	this.core.gl.clearColor.apply(this,this.data.background);
-	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT);
+	this.core.gl.clearColor.apply(this.core.gl,this.data.background);
+	// canvasを初期化する際の深度を設定する
+	this.core.gl.clearDepth(1.0);
+	this.core.gl.clear(this.core.gl.COLOR_BUFFER_BIT|this.core.gl.DEPTH_BUFFER_BIT); // 画面上の色をクリア + 深度バッファクリア
 
 	this.core.gl.viewport(0, 0, this.core.width, this.core.height);
 	glmat.mat4.perspective(this.data.world.m.pMatrix, 45.0, this.core.width/this.core.height, 0.1, 100.0);
@@ -10530,16 +10491,24 @@ SceneLoading.prototype.draw = function(){
 
 	this.checkStairs();
 
+	// MEMO: renderworld と rendersprites どちらを先に呼び出してもよい
 	this.renderWorld();
 	this.renderSprites();
+
+	// 19: 描画
+	this.core.gl.flush();
 };
 
 SceneLoading.prototype.renderWorld = function(){
 	this.core.gl.enable(this.core.gl.CULL_FACE);
 	this.core.gl.cullFace(this.core.gl.BACK);
+
+	// 15. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.world.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
+	// 16. uniform 変数にデータを登録する
+	// uniform -> 頂点ごとに一律で渡されるデータ。4fv -> vec4, 3fv -> vec3
 	this.core.gl.uniformMatrix4fv(this.data.world.u.MMatrix, false, this.data.world.m.mMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.world.u.VMatrix, false, this.data.world.m.vMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.world.u.PMatrix, false, this.data.world.m.pMatrix);
@@ -10547,13 +10516,17 @@ SceneLoading.prototype.renderWorld = function(){
 	this.core.gl.uniform3fv(this.data.world.u.AmbientColor, this.level.ambient);
 
 	this.updateLights(this.data.world);
-	// Bind buffers
+
+	// attribute 変数にデータを登録する
 	this.attribSetup(this.data.world.a.Position, this.terrain.vertexObject, 3);
 	this.attribSetup(this.data.world.a.Texture, this.terrain.texCoordObject, 2);
 	this.attribSetup(this.data.world.a.Normal, this.terrain.normalObject, 3);
 
+	// 20. 有効にするテクスチャユニットを指定(今回は0)
 	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
+	// 21. テクスチャをバインドする
 	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.terrain.textureAtlas.texture);
+	// 22. テクスチャデータをシェーダに送る(ユニット 0)
 	this.core.gl.uniform1i(this.data.world.u.Sampler, 0);
 
 	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.terrain.indexObject);
@@ -10570,23 +10543,32 @@ SceneLoading.prototype.updateLights = function(program){
 	}
 };
 
+// attribute -> 頂点ごとに異なるデータ
 SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 	if (!type)
 		type = this.core.gl.FLOAT;
+
+	// 17. attribute 属性を有効にする
 	this.core.gl.enableVertexAttribArray(attrib);
+
+	// 18. 頂点バッファをバインドする
 	this.core.gl.bindBuffer(this.core.gl.ARRAY_BUFFER, object);
+	// 19. attribute 属性を登録する(1頂点の要素数、型を登録)
 	this.core.gl.vertexAttribPointer(attrib, size, type, false, 0, 0);
 };
 
 SceneLoading.prototype.renderSprites = function() {
 	this.core.gl.disable(this.core.gl.CULL_FACE);
 
+	// 15. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.sprites.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
 	this.sprites.sprites[0].theta = this.camera.theta[2];
 	this.sprites.update();
 
+	// 16. uniform 変数にデータを登録する
+	// uniform -> 頂点ごとに一律で渡されるデータ。4fv -> vec4, 3fv -> vec3, 1f -> float
 	this.core.gl.uniformMatrix4fv(this.data.sprites.u.MMatrix, false, this.data.world.m.mMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.sprites.u.VMatrix, false, this.data.world.m.vMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.sprites.u.PMatrix, false, this.data.world.m.pMatrix);
@@ -10597,15 +10579,18 @@ SceneLoading.prototype.renderSprites = function() {
 
 	this.updateLights(this.data.sprites);
 
-	// Bind buffers
+	// attribute 変数にデータを登録する
 	this.attribSetup(this.data.sprites.a.Position, this.sprites.vertexObject, 3);
 	this.attribSetup(this.data.sprites.a.Texture, this.sprites.texCoordObject, 2);
 	this.attribSetup(this.data.sprites.a.Offset, this.sprites.offsetObject, 3);
 	this.attribSetup(this.data.sprites.a.Moving, this.sprites.movingObject, 1);
 	this.attribSetup(this.data.sprites.a.Flipped, this.sprites.flippedObject, 1);
 
+	// 20. 有効にするテクスチャユニットを指定(今回は0)
 	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
+	// 21. テクスチャをバインドする
 	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.sprites.textureAtlas.texture);
+	// 22. テクスチャデータをシェーダに送る(ユニット 0)
 	this.core.gl.uniform1i(this.data.sprites.u.Sampler, 0);
 
 	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.sprites.indexObject);
@@ -10674,22 +10659,16 @@ SceneLoading.prototype.handleInputs = function() {
 };
 module.exports = SceneLoading;
 
-},{"../assets_config":14,"../camera":15,"../dungeon_convert":19,"../hakurei":21,"../level":37,"../point_light":39,"../programs":40,"../sprites":49,"../terrain":50,"../texture":51,"gl-matrix":2}],43:[function(require,module,exports){
+},{"../assets_config":14,"../camera":15,"../dungeon_convert":19,"../hakurei":21,"../level":38,"../point_light":40,"../programs":41,"../sprites":47,"../terrain":48,"../texture":49,"gl-matrix":2}],43:[function(require,module,exports){
 module.exports = "#define M_PI 3.1415926535897932384626433832795\n\nattribute vec3 aPosition;\nattribute vec3 aOffset;\nattribute vec2 aTexture;\nattribute float aMoving;\nattribute float aFlipped;\n\nuniform vec3 uCamPos;\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\nuniform float uCounter;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nconst vec3 camUp = vec3(0.0, 0.0, 1.0);\n\nvoid main(void) {\n\t// Billboarding\n\tvec3 look = normalize(uCamPos - aPosition);\n\tvec3 right = normalize(cross(camUp, look));\n\tvec3 up = normalize(cross(look, right));\n\n\tvec3 offset = aOffset;\n\tif (aMoving > 0.5 && offset.z < 0.5) {\n\t\t// Walking wobble animation\n\t\tfloat t = mod(1.5*uCounter/M_PI,2.0*M_PI);\n\t\tt = (abs(t-M_PI)-0.5*M_PI)*0.25;\n\t\tfloat x = offset.x;\n\t\tfloat z = offset.z;\n\t\tfloat c = cos(t);\n\t\tfloat s = sin(t);\n\t\toffset.x = x*c - z*s;\n\t\toffset.z = x*s + z*c;\n\t\tif (x < 0.0)\n\t\t\toffset.z *= 0.70;\n\t}\n\telse {\n\t\t// Idle wobble animation\n\t\tfloat t = mod(uCounter/M_PI,2.0*M_PI);\n\n\t\tvec3 mult = vec3(0.05, 0.0, 0.13);\n\t\tif (offset.x < 0.0)\n\t\t\tmult.x *= -1.0;\n\t\tif (offset.z > 0.5)\n\t\t\tmult.z *= -1.0;\n\t\telse\n\t\t\tmult.z = 0.0;\n\n\t\toffset.x += sin(t)*mult.x;\n\t\toffset.z += cos(t)*mult.z;\n\t}\n\tif (aFlipped > 0.5)\n\t\toffset.x *= -1.0;\n\n\t// Thanks to http://www.gamedev.net/topic/385785-billboard-shader/#entry3550648\n\tvec3 vR = offset.x*right;\n\tvec3 vU = offset.z*up;\n\tvec4 d = vec4(vR+vU+look*0.5, 0.0);\n\tvPosition = vWorldVertex =  uMMatrix * (vec4(aPosition, 1.0) + d);\n\n\tvWorldNormal = look;\n\tvTexture = aTexture;\n\n\tgl_Position = uPMatrix * uVMatrix * vWorldVertex;\n}\n\n";
 
 },{}],44:[function(require,module,exports){
-module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nvarying vec4 vPosition;\n\n// Via http://devmaster.net/posts/3002/shader-effects-shadow-mapping\nvec4 pack(float depth) {\n\tconst vec4 bias = vec4(1.0/255.0, 1.0/255.0, 1.0/255.0, 0.0);\n\n\tfloat r = depth;\n\tfloat g = fract(r*255.0);\n\tfloat b = fract(g*255.0);\n\tfloat a = fract(b*255.0);\n\tvec4 color = vec4(r, g, b, a);\n\n\treturn color - (color.yzww * bias);\n}\n\nvoid main(void) {\n\tfloat linearDepth = length(vPosition) * LinearDepthConstant;\n\t/*gl_FragColor = pack(linearDepth);*/\n\tgl_FragColor = vec4(1.0,0.0,1.0,1.0);\n}\n\n";
-
-},{}],45:[function(require,module,exports){
-module.exports = "attribute vec3 aPosition;\n\nuniform mat4 uVMatrix;\nuniform mat4 uMMatrix;\nuniform mat4 uPMatrix;\n\nvarying vec4 vPosition;\n\nvoid main(void) {\n\tvPosition = uVMatrix * uMMatrix * vec4(aPosition + vec3(-8,-8,-8), 1.0);\n\tvPosition += vec4(0,0,-16,0);\n\tvPosition = vec4(aPosition, 1.0);\n\tgl_Position = uPMatrix * vPosition;\n}\n\n";
-
-},{}],46:[function(require,module,exports){
 module.exports = "precision mediump float;\n\nconst float Near = 1.0;\nconst float Far = 30.0;\nconst float LinearDepthConstant = 1.0 / (Far - Near);\n\nstruct PointLight\n{\n\tfloat enabled;\n\tvec3 color;\n\tvec3 position;\n\tvec3 attenuation;\n};\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nuniform PointLight uLight[4];\nuniform sampler2D uDepthMap;\n\nuniform sampler2D uSampler; // texture coords\nuniform vec3 uAmbientColor;\n\nfloat unpack(vec4 color)\n{\n\tconst vec4 bitShifts = vec4(1.0, 1.0/255.0, 1.0/(255.0*255.0), 1.0/(255.0*255.0*255.0));\n\treturn dot(color, bitShifts);\n}\n\nvoid main(void) {\n\tvec3 normal = normalize(vWorldNormal);\n\tvec4 texColor = texture2D(uSampler, vec2(vTexture.s, vTexture.t));\n\tif (texColor.a < 0.1) // Transparent textures\n\t\tdiscard;\n\n\tvec3 color = uAmbientColor;\n\n\tfor (int i=0; i<4; i++) {\n\t\tif (uLight[i].enabled < 0.5)\n\t\t\tcontinue;\n\t\tvec3 lightVec = normalize(uLight[i].position - vWorldVertex.xyz);\n\t\tfloat l = dot(normal, lightVec);\n\n\t\tif (l <= 0.0)\n\t\t\tcontinue;\n\n\t\tfloat d = distance(vWorldVertex.xyz, uLight[i].position);\n\t\tfloat a = 1.0/(\n\t\t\tuLight[i].attenuation.x +\n\t\t\tuLight[i].attenuation.y*d + \n\t\t\tuLight[i].attenuation.z*d*d\n\t\t);\n\t\tcolor += l*a*uLight[i].color;\n\t}\n\n\t//vec3 depth = vPosition.xyz / vPosition.w;\n\t//depth.z = length(vWorldVertex.xyz - uLight[0].position) * LinearDepthConstant;\n\tfloat shadow = 1.0;\n\n\t//depth.z *= 0.96; // Offset depth \n\t//if (depth.z > unpack(texture2D(uDepthMap, depth.xy)))\n\t\t//shadow *= 0.5;\n\n\tgl_FragColor = clamp(vec4(texColor.rgb*color*shadow, texColor.a), 0.0, 1.0);\n}\n\n";
 
-},{}],47:[function(require,module,exports){
+},{}],45:[function(require,module,exports){
 module.exports = "attribute vec3 aPosition;\nattribute vec3 aNormal;\nattribute vec2 aTexture;\n\nuniform mat4 uMMatrix;\nuniform mat4 uVMatrix;\nuniform mat4 uPMatrix;\n\nuniform mat4 uLightVMatrix;\nuniform mat4 uLightPMatrix;\n\nvarying vec4 vWorldVertex;\nvarying vec3 vWorldNormal;\nvarying vec4 vPosition;\nvarying vec2 vTexture;\n\nvoid main(void) {\n\tvWorldVertex = uMMatrix * vec4(aPosition, 1.0);\n\tvec4 viewVertex = uVMatrix * vWorldVertex;\n\tgl_Position = uPMatrix * viewVertex;\n\n\tvTexture = aTexture;\n\tvWorldNormal = normalize(mat3(uMMatrix) * aNormal);\n\n\tvPosition = uLightPMatrix * uLightVMatrix * vWorldVertex;\n}\n\n";
 
-},{}],48:[function(require,module,exports){
+},{}],46:[function(require,module,exports){
 'use strict';
 var Sprite = function(pos) {
 	this.pos = pos ? pos : [0,0,0];
@@ -10748,7 +10727,7 @@ Sprite.prototype.checkCollision = function(env) {
 };
 module.exports = Sprite;
 
-},{}],49:[function(require,module,exports){
+},{}],47:[function(require,module,exports){
 'use strict';
 
 /* 自分と自分についてくるキャラ */
@@ -10770,6 +10749,7 @@ var Sprites = function(gl, textureAtlas) {
 	this.baseIndex = 0;
 
 	// WebGL が使うオブジェクト
+	// 11. 頂点バッファを作成
 	this.vertexObject = gl.createBuffer();
 	this.texCoordObject = gl.createBuffer();
 	this.offsetObject = gl.createBuffer();
@@ -10786,7 +10766,8 @@ Sprites.prototype.update = function() {
 		this.flipSprite(i,this.sprites[i].flipped);
 	}
 
-	// Initialize buffer data
+	// 12. 頂点バッファをバインドする
+	// 13. 頂点バッファにデータをセット
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexObject);
 	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
 
@@ -10805,6 +10786,7 @@ Sprites.prototype.update = function() {
 	this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexObject);
 	this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
 
+	// 頂点バッファのバインドをクリア
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 
 	for (i=0; i<this.sprites.length; i++) {
@@ -10831,6 +10813,7 @@ Sprites.prototype.addSprite = function(tileNum, pos) {
 	}
 	var st = this.textureAtlas.getST(tileNum);
 
+	// テクスチャ座標を作成
 	this.texCoords = this.texCoords.concat(
 		st[2], st[1], 
 		st[0], st[1], 
@@ -10869,7 +10852,7 @@ Sprites.prototype.offsetSprite = function(spriteId, d) {
 
 module.exports = Sprites;
 
-},{"./sprite":48}],50:[function(require,module,exports){
+},{"./sprite":46}],48:[function(require,module,exports){
 'use strict';
 
 /* 地形 */
@@ -10954,16 +10937,21 @@ Terrain.prototype.generate = function(world) {
 		}
 	}
 
-	// Initialize buffer data
+
+	/*
 	this.gl.deleteBuffer(this.vertexObject);
 	this.gl.deleteBuffer(this.normalObject);
 	this.gl.deleteBuffer(this.texCoordObject);
 	this.gl.deleteBuffer(this.indexObject);
+	*/
+	// 11. 頂点バッファを作成
 	this.vertexObject = this.gl.createBuffer();
 	this.normalObject = this.gl.createBuffer();
 	this.texCoordObject = this.gl.createBuffer();
 	this.indexObject = this.gl.createBuffer();
 
+	// 12. 頂点バッファをバインドする
+	// 13. 頂点バッファにデータをセット
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.vertexObject);
 	this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(this.vertices), this.gl.STATIC_DRAW);
 
@@ -10976,6 +10964,7 @@ Terrain.prototype.generate = function(world) {
 	this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.indexObject);
 	this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.indices), this.gl.STATIC_DRAW);
 
+	// 頂点バッファのバインドをクリア
 	this.gl.bindBuffer(this.gl.ARRAY_BUFFER, null);
 };
 
@@ -11107,7 +11096,7 @@ Terrain.prototype.specialTiles = {
 };
 module.exports = Terrain;
 
-},{}],51:[function(require,module,exports){
+},{}],49:[function(require,module,exports){
 'use strict';
 
 // gl: WebGLContext オブジェクト
@@ -11120,16 +11109,23 @@ var TextureAtlas = function(gl, image, tileSizePx) {
 	this.paddingNormalized = 0.5/this.imageSizePx;
 	this.tilesPerRow = Math.floor(this.imageSizePx/tileSizePx);
 
+	// 11. テクスチャを作成
 	// image を texture に紐付け
 	this.texture = gl.createTexture();
 	this.handleTexture(gl, image, this.texture);
 };
 
 TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
+	// 12. 頂点バッファをバインドする
 	gl.bindTexture(gl.TEXTURE_2D, texture);
+	// 13. テクスチャへイメージを適用
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	// 13. ミップマップを生成
+	gl.generateMipmap(gl.TEXTURE_2D);
+
+	// 14. テクスチャパラメータの設定
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); //テクスチャが縮小される際の補間方法
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); //テクスチャが拡大される際の補間方法
 	gl.bindTexture(gl.TEXTURE_2D, null);
 };
 
@@ -11149,4 +11145,4 @@ TextureAtlas.prototype.getST = function(tileNum) {
 
 module.exports = TextureAtlas;
 
-},{}]},{},[38]);
+},{}]},{},[39]);
