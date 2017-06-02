@@ -70,6 +70,16 @@ var newProgram = function(gl, vs, fs, att, uni, mats) {
 	for (i=0; i<uni.length; i++) 
 		p.u[uni[i]] = gl.getUniformLocation(glProgram, "u"+uni[i]);
 
+	// Uniform array of PointLight structs in GLSL
+	p.u["Light"] = [];
+	for (i=0; i<4; i++) {
+		var l = p.u["Light"];
+		l[i] = {};
+		for (var key in new PointLight()) {
+			l[i][key] = gl.getUniformLocation(glProgram, "uLight["+i+"]."+key);
+		}
+	}
+
 	// Initialize matrices
 	for (var prop in mats) {
 		var size = mats[prop];
@@ -83,13 +93,17 @@ var newProgram = function(gl, vs, fs, att, uni, mats) {
 		p.m[prop] = mat.create();
 		mat.identity(p.m[prop]);
 	}
+
 	return p;
 };
 
-
-
-var programs = function (gl) {
+module.exports = function (gl) {
 	return {
+		// 背景色
+		//background: [0.5, 0.5, 0.5, 1.0], // 灰色
+		background: [0, 0, 0, 1], // 黒
+		rotateSpeed: 0.01,
+		zoomFactor: 0.01,
 		world: newProgram(
 			gl,
 			// 頂点シェーダ／フラグメントシェーダ
@@ -147,34 +161,3 @@ var programs = function (gl) {
 		),
 	};
 };
-
-
-var CreateData = function(gl){
-		var data = programs(gl);
-
-		// Uniform array of PointLight structs in GLSL
-		setLightUniforms(gl, data.world);
-		setLightUniforms(gl, data.sprites);
-
-		// 背景色
-		//data.background = [0.5, 0.5, 0.5, 1.0];
-		data.background = [0, 0, 0, 1]; // 黒
-		data.rotateSpeed = 0.01;
-		data.zoomFactor = 0.01;
-		return data;
-};
-function setLightUniforms(gl, prog) {
-	// Uniform array of PointLight structs in GLSL
-	prog.u.Light = [];
-	for (var i=0; i<4; i++) {
-		var l = prog.u.Light;
-		l[i] = {};
-		for (var key in new PointLight()) {
-			l[i][key] = gl.getUniformLocation(prog.program, "uLight["+i+"]."+key);
-		}
-	}
-}
-
-
-
-module.exports = CreateData;
