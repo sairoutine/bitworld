@@ -141,11 +141,11 @@ SceneLoading.prototype.renderWorld = function(){
 	this.core.gl.enable(this.core.gl.CULL_FACE);
 	this.core.gl.cullFace(this.core.gl.BACK);
 
-	// 14. プログラムオブジェクトを有効にする
+	// 15. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.world.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
-	// 15. uniform 変数にデータを登録する
+	// 16. uniform 変数にデータを登録する
 	// uniform -> 頂点ごとに一律で渡されるデータ。4fv -> vec4, 3fv -> vec3
 	this.core.gl.uniformMatrix4fv(this.data.world.u.MMatrix, false, this.data.world.m.mMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.world.u.VMatrix, false, this.data.world.m.vMatrix);
@@ -160,11 +160,11 @@ SceneLoading.prototype.renderWorld = function(){
 	this.attribSetup(this.data.world.a.Texture, this.terrain.texCoordObject, 2);
 	this.attribSetup(this.data.world.a.Normal, this.terrain.normalObject, 3);
 
-	// 19. 有効にするテクスチャユニットを指定(今回は0)
+	// 20. 有効にするテクスチャユニットを指定(今回は0)
 	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
-	// 20. テクスチャをバインドする
+	// 21. テクスチャをバインドする
 	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.terrain.textureAtlas.texture);
-	// 21. テクスチャデータをシェーダに送る(ユニット 0)
+	// 22. テクスチャデータをシェーダに送る(ユニット 0)
 	this.core.gl.uniform1i(this.data.world.u.Sampler, 0);
 
 	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.terrain.indexObject);
@@ -186,26 +186,26 @@ SceneLoading.prototype.attribSetup = function(attrib, object, size, type) {
 	if (!type)
 		type = this.core.gl.FLOAT;
 
-	// 16. attribute 属性を有効にする
+	// 17. attribute 属性を有効にする
 	this.core.gl.enableVertexAttribArray(attrib);
 
-	// 17. 頂点バッファをバインドする
+	// 18. 頂点バッファをバインドする
 	this.core.gl.bindBuffer(this.core.gl.ARRAY_BUFFER, object);
-	// 18. attribute 属性を登録する(1頂点の要素数、型を登録)
+	// 19. attribute 属性を登録する(1頂点の要素数、型を登録)
 	this.core.gl.vertexAttribPointer(attrib, size, type, false, 0, 0);
 };
 
 SceneLoading.prototype.renderSprites = function() {
 	this.core.gl.disable(this.core.gl.CULL_FACE);
 
-	// 14. プログラムオブジェクトを有効にする
+	// 15. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.sprites.program);
 	this.data.world.m.vMatrix = this.camera.matrix;
 
 	this.sprites.sprites[0].theta = this.camera.theta[2];
 	this.sprites.update();
 
-	// 15. uniform 変数にデータを登録する
+	// 16. uniform 変数にデータを登録する
 	// uniform -> 頂点ごとに一律で渡されるデータ。4fv -> vec4, 3fv -> vec3, 1f -> float
 	this.core.gl.uniformMatrix4fv(this.data.sprites.u.MMatrix, false, this.data.world.m.mMatrix);
 	this.core.gl.uniformMatrix4fv(this.data.sprites.u.VMatrix, false, this.data.world.m.vMatrix);
@@ -224,11 +224,11 @@ SceneLoading.prototype.renderSprites = function() {
 	this.attribSetup(this.data.sprites.a.Moving, this.sprites.movingObject, 1);
 	this.attribSetup(this.data.sprites.a.Flipped, this.sprites.flippedObject, 1);
 
-	// 19. 有効にするテクスチャユニットを指定(今回は0)
+	// 20. 有効にするテクスチャユニットを指定(今回は0)
 	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
-	// 20. テクスチャをバインドする
+	// 21. テクスチャをバインドする
 	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.sprites.textureAtlas.texture);
-	// 21. テクスチャデータをシェーダに送る(ユニット 0)
+	// 22. テクスチャデータをシェーダに送る(ユニット 0)
 	this.core.gl.uniform1i(this.data.sprites.u.Sampler, 0);
 
 	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.sprites.indexObject);

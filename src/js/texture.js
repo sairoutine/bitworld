@@ -23,6 +23,8 @@ TextureAtlas.prototype.handleTexture = function(gl, image, texture) {
 	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
 	// 13. ミップマップを生成
 	gl.generateMipmap(gl.TEXTURE_2D);
+
+	// 14. テクスチャパラメータの設定
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 	gl.bindTexture(gl.TEXTURE_2D, null);
