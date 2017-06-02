@@ -83,6 +83,7 @@ Sprites.prototype.addSprite = function(tileNum, pos) {
 	}
 	var st = this.textureAtlas.getST(tileNum);
 
+	// テクスチャ座標を作成
 	this.texCoords = this.texCoords.concat(
 		st[2], st[1], 
 		st[0], st[1], 

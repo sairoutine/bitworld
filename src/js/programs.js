@@ -105,7 +105,7 @@ var programs = function (gl) {
 				"PMatrix", 
 				"MMatrix", 
 				"VMatrix", 
-				"Sampler", 
+				"Sampler", // テクスチャ
 				"LightVMatrix", 
 				"LightPMatrix", 
 				"AmbientColor", 
@@ -138,7 +138,7 @@ var programs = function (gl) {
 				"PMatrix", 
 				"MMatrix", 
 				"VMatrix", 
-				"Sampler", 
+				"Sampler", // テクスチャ
 				"AmbientColor", 
 				"DepthMap", 
 				"Light"

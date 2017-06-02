@@ -160,8 +160,11 @@ SceneLoading.prototype.renderWorld = function(){
 	this.attribSetup(this.data.world.a.Texture, this.terrain.texCoordObject, 2);
 	this.attribSetup(this.data.world.a.Normal, this.terrain.normalObject, 3);
 
+	// 19. 有効にするテクスチャユニットを指定(今回は0)
 	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
+	// 20. テクスチャをバインドする
 	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.terrain.textureAtlas.texture);
+	// 21. テクスチャデータをシェーダに送る(ユニット 0)
 	this.core.gl.uniform1i(this.data.world.u.Sampler, 0);
 
 	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.terrain.indexObject);
@@ -221,8 +224,11 @@ SceneLoading.prototype.renderSprites = function() {
 	this.attribSetup(this.data.sprites.a.Moving, this.sprites.movingObject, 1);
 	this.attribSetup(this.data.sprites.a.Flipped, this.sprites.flippedObject, 1);
 
+	// 19. 有効にするテクスチャユニットを指定(今回は0)
 	this.core.gl.activeTexture(this.core.gl.TEXTURE0);
+	// 20. テクスチャをバインドする
 	this.core.gl.bindTexture(this.core.gl.TEXTURE_2D, this.sprites.textureAtlas.texture);
+	// 21. テクスチャデータをシェーダに送る(ユニット 0)
 	this.core.gl.uniform1i(this.data.sprites.u.Sampler, 0);
 
 	this.core.gl.bindBuffer(this.core.gl.ELEMENT_ARRAY_BUFFER, this.sprites.indexObject);
