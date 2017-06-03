@@ -123,6 +123,7 @@ SceneLoading.prototype.draw = function(){
 
 	this.camera.moveCenter(this.player.pos, [0.0, 0.0, 0.5]);
 	this.camera.updateMatrix(this.terrain.cubes);
+	this.data.world.m.vMatrix = this.camera.matrix;
 
 	this.checkStairs();
 
@@ -140,7 +141,6 @@ SceneLoading.prototype.renderWorld = function(){
 
 	// 15. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.world.program);
-	this.data.world.m.vMatrix = this.camera.matrix;
 
 	// 16. uniform 変数にデータを登録する
 	// uniform -> 頂点ごとに一律で渡されるデータ。4fv -> vec4, 3fv -> vec3
@@ -197,7 +197,6 @@ SceneLoading.prototype.renderSprites = function() {
 
 	// 15. プログラムオブジェクトを有効にする
 	this.core.gl.useProgram(this.data.sprites.program);
-	this.data.world.m.vMatrix = this.camera.matrix;
 
 	this.sprites.sprites[0].theta = this.camera.theta[2];
 	this.sprites.update();
